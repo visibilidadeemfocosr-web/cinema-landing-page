@@ -915,41 +915,48 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Descrições */}
-            <div className="space-y-2">
-              <Label htmlFor="description" className="text-zinc-900">Descrição (Português)</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Descrição do filme..."
-                rows={3}
-                className="text-zinc-900"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+            {/* Descrições Detalhadas */}
+            <div className="space-y-4 border-t border-zinc-200 pt-6">
               <div className="space-y-2">
-                <Label htmlFor="descriptionEn" className="text-zinc-900">Descrição (Inglês)</Label>
+                <Label htmlFor="description" className="text-zinc-900 font-semibold">
+                  Informações Detalhadas do Filme (Português)
+                </Label>
+                <p className="text-sm text-zinc-500">
+                  Adicione informações como prêmios, seleções, equipe técnica, etc. Use quebras de linha para organizar o texto.
+                </p>
                 <Textarea
-                  id="descriptionEn"
-                  value={formData.descriptionEn}
-                  onChange={(e) => setFormData({ ...formData, descriptionEn: e.target.value })}
-                  placeholder="Movie description..."
-                  rows={3}
-                  className="text-zinc-900"
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Exemplo:&#10;Prêmio de melhor Curta-metragem LGBTQIA no Unified filmmakers Festival - Alemanha - 2021&#10;&#10;Seleção Oficial no 8° Festival de Cinema de Caruaru - 2021&#10;&#10;Direção e Roteiro: Alice Stamato e Márcio Masselli&#10;Produção Executiva: Márcio Masselli&#10;..."
+                  rows={12}
+                  className="text-zinc-900 font-mono text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="descriptionEs" className="text-zinc-900">Descrição (Espanhol)</Label>
-                <Textarea
-                  id="descriptionEs"
-                  value={formData.descriptionEs}
-                  onChange={(e) => setFormData({ ...formData, descriptionEs: e.target.value })}
-                  placeholder="Descripción de la película..."
-                  rows={3}
-                  className="text-zinc-900"
-                />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="descriptionEn" className="text-zinc-900">Informações Detalhadas (Inglês)</Label>
+                  <Textarea
+                    id="descriptionEn"
+                    value={formData.descriptionEn}
+                    onChange={(e) => setFormData({ ...formData, descriptionEn: e.target.value })}
+                    placeholder="Detailed information in English..."
+                    rows={10}
+                    className="text-zinc-900 font-mono text-sm"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="descriptionEs" className="text-zinc-900">Informações Detalhadas (Espanhol)</Label>
+                  <Textarea
+                    id="descriptionEs"
+                    value={formData.descriptionEs}
+                    onChange={(e) => setFormData({ ...formData, descriptionEs: e.target.value })}
+                    placeholder="Información detallada en español..."
+                    rows={10}
+                    className="text-zinc-900 font-mono text-sm"
+                  />
+                </div>
               </div>
             </div>
 

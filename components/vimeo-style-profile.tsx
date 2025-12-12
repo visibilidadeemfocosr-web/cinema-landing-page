@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { Mail, MapPin, Film, Loader2 } from "lucide-react"
+import { Mail, MapPin, Film, Loader2, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,6 +18,7 @@ export function VimeoStyleProfile() {
   const [showAll, setShowAll] = useState(false)
   const [showFullBio, setShowFullBio] = useState(false)
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null)
+  const [selectedFilmInfo, setSelectedFilmInfo] = useState<string | null>(null) // ID do filme para mostrar informações
   const [bannerUrl, setBannerUrl] = useState<string | null>(null) // Iniciar como null para evitar flash
   const [bannerPosition, setBannerPosition] = useState<string>('center')
   const [bannerOpacity, setBannerOpacity] = useState<number>(90) // Opacidade em percentual (0-100)
@@ -1144,13 +1145,21 @@ export function VimeoStyleProfile() {
                 <div className="space-y-6 sm:space-y-8">
                 {displayedVideos.map((video) => (
                   <div key={video.id} className="group">
-                    <button
-                      onClick={() => setSelectedVideo(video.link)}
-                      className="block w-full text-left"
-                      aria-label={`Assistir ${video.title}`}
-                    >
+                    <div className="block w-full text-left">
                       {/* Video Thumbnail */}
-                      <div className="relative mb-2 sm:mb-3 aspect-video overflow-hidden rounded-lg sm:rounded bg-gradient-to-br from-zinc-200 to-zinc-300 border border-zinc-200 cursor-pointer">
+                      <div 
+                        onClick={() => setSelectedVideo(video.link)}
+                        className="relative mb-2 sm:mb-3 aspect-video overflow-hidden rounded-lg sm:rounded bg-gradient-to-br from-zinc-200 to-zinc-300 border border-zinc-200 cursor-pointer"
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Assistir ${video.title}`}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            setSelectedVideo(video.link)
+                          }
+                        }}
+                      >
                         {video.thumbnail ? (
                         <Image
                             src={video.thumbnail}
@@ -1197,11 +1206,23 @@ export function VimeoStyleProfile() {
                       </div>
 
                       {/* Video Info */}
-                      <h3 className="text-base sm:text-lg font-medium text-zinc-900 group-hover:text-zinc-600 transition-colors mb-2">
+                      <h3 
+                        onClick={() => setSelectedVideo(video.link)}
+                        className="text-base sm:text-lg font-medium text-zinc-900 group-hover:text-zinc-600 transition-colors mb-2 cursor-pointer"
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Assistir ${video.title}`}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            setSelectedVideo(video.link)
+                          }
+                        }}
+                      >
                         {video.title}
                       </h3>
                       {/* Tags: Ano, Duração, Categoria */}
-                      <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2">
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2 mb-3">
                         {(() => {
                           const film = films.find(f => f.id === video.id)
                           if (!film) return null
@@ -1240,15 +1261,37 @@ export function VimeoStyleProfile() {
                                          </span>
                                        )}
                                        {film.type && (
-                                         <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200">
+                                         <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200">
                                            {translateType(film.type)}
+                                           {film.description && (
+                                             <span
+                                               onClick={(e) => {
+                                                 e.stopPropagation()
+                                                 setSelectedFilmInfo(film.id)
+                                               }}
+                                               className="ml-1 p-0.5 rounded-full hover:bg-zinc-200 transition-colors cursor-pointer"
+                                               role="button"
+                                               tabIndex={0}
+                                               aria-label="Ver informações do filme"
+                                               title="Ver informações detalhadas"
+                                               onKeyDown={(e) => {
+                                                 if (e.key === 'Enter' || e.key === ' ') {
+                                                   e.preventDefault()
+                                                   e.stopPropagation()
+                                                   setSelectedFilmInfo(film.id)
+                                                 }
+                                               }}
+                                             >
+                                               <Info className="h-3 w-3 text-zinc-600" />
+                                             </span>
+                                           )}
                                          </span>
                                        )}
                             </>
                           )
                         })()}
                       </div>
-                    </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1279,6 +1322,42 @@ export function VimeoStyleProfile() {
                   )}
                 </DialogContent>
               </Dialog>
+
+              {/* Modal de Informações do Filme */}
+              {(() => {
+                const film = selectedFilmInfo ? films.find(f => f.id === selectedFilmInfo) : null
+                if (!film || !film.description) return null
+                
+                // Selecionar descrição baseada no idioma
+                const description = language === 'pt' 
+                  ? film.description 
+                  : language === 'en' 
+                    ? (film.descriptionEn || film.description)
+                    : (film.descriptionEs || film.description)
+                
+                return (
+                  <Dialog open={!!selectedFilmInfo} onOpenChange={(open) => !open && setSelectedFilmInfo(null)}>
+                    <DialogContent className="max-w-2xl max-h-[80vh] bg-white overflow-y-auto">
+                      {/* Logo centralizado */}
+                      <div className="flex justify-center mb-4">
+                        <img
+                          src="/peixeheader.png"
+                          alt="Alice Stamato"
+                          className="h-12 w-12 sm:h-16 sm:w-16 object-contain"
+                        />
+                      </div>
+                      <DialogTitle className="text-xl font-bold mb-4 text-zinc-900 text-center">
+                        {film.title}
+                      </DialogTitle>
+                      <div className="space-y-4">
+                        <div className="text-xs sm:text-sm text-zinc-600 leading-relaxed whitespace-pre-line">
+                          {description}
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )
+              })()}
 
                      {!loading && !showAll && allVideosToDisplay.length > 4 && (
                        <div className="mt-6 sm:mt-8 flex justify-center">
