@@ -13,12 +13,14 @@ export interface Film {
   year: number
   duration: string
   category: string
+  type?: string
   thumbnail?: string
   videoUrl: string
-  videoSize: number
-  videoFormat: string
+  videoSize?: number
+  videoFormat?: string
   views: number
   isPublished: boolean
+  displayOrder?: number
   createdAt: string
   updatedAt: string
 }

@@ -28,7 +28,7 @@ export function VimeoStyleProfile() {
     vimeoId: film.id,
     year: film.year,
     category: film.category,
-    type: film.type,
+    type: film.type || undefined,
   }))
   
   // Usar apenas filmes do banco (sem fallback para mock)
