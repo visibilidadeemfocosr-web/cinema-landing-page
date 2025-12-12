@@ -44,13 +44,13 @@ export async function GET(request: NextRequest) {
       where,
     })
 
-    // Ordenar: primeiro por displayOrder (nulls por último), depois por createdAt
+    // Ordenar: primeiro por displayOrder DECRESCENTE (maior número primeiro, nulls por último), depois por createdAt
     films.sort((a, b) => {
-      const aOrder = a.displayOrder ?? 999999
-      const bOrder = b.displayOrder ?? 999999
+      const aOrder = a.displayOrder ?? -1 // nulls vão para o final
+      const bOrder = b.displayOrder ?? -1
       
       if (aOrder !== bOrder) {
-        return aOrder - bOrder
+        return bOrder - aOrder // Ordem DECRESCENTE (maior primeiro)
       }
       
       // Se displayOrder for igual, ordenar por data de criação (mais recente primeiro)

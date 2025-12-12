@@ -36,7 +36,7 @@ export default function AdminPage() {
   const [loadingFilms, setLoadingFilms] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
-  const [sortBy, setSortBy] = useState<'title' | 'year' | 'createdAt' | 'category'>('createdAt')
+  const [sortBy, setSortBy] = useState<'title' | 'year' | 'createdAt' | 'category' | 'displayOrder'>('displayOrder')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [formData, setFormData] = useState<FilmData>({
     title: '',
@@ -103,6 +103,17 @@ export default function AdminPage() {
         let bValue: any
 
         switch (sortBy) {
+          case 'displayOrder':
+            // Ordenação decrescente por padrão (maior número primeiro)
+            // null/undefined/0 vão para o final
+            aValue = a.displayOrder ?? -1
+            bValue = b.displayOrder ?? -1
+            // Para displayOrder, sempre usar ordem decrescente (maior primeiro)
+            if (aValue !== bValue) {
+              return bValue - aValue // Decrescente
+            }
+            // Se displayOrder for igual, ordenar por data de criação (mais recente primeiro)
+            return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
           case 'title':
             aValue = a.title?.toLowerCase() || ''
             bValue = b.title?.toLowerCase() || ''
@@ -186,10 +197,11 @@ export default function AdminPage() {
       category: film.category,
       type: film.type || '',
       thumbnail: film.thumbnail || '',
+      thumbnailFile: null, // Adicionar thumbnailFile
       videoFile: null,
       videoUrl: film.videoUrl || '',
       isPublished: film.isPublished,
-      displayOrder: film.displayOrder || 0,
+      displayOrder: film.displayOrder ?? 0, // Usar ?? para tratar null corretamente
     })
     setEditingId(film.id)
     setShowForm(true)
@@ -428,12 +440,13 @@ export default function AdminPage() {
                   </div>
                   <Select
                     value={sortBy}
-                    onValueChange={(value: 'title' | 'year' | 'createdAt' | 'category') => setSortBy(value)}
+                    onValueChange={(value: 'title' | 'year' | 'createdAt' | 'category' | 'displayOrder') => setSortBy(value)}
                   >
                     <SelectTrigger id="sortBy" className="w-48 text-zinc-900 bg-white border-zinc-300">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
+                      <SelectItem value="displayOrder" className="text-zinc-900">Ordem de Exibição</SelectItem>
                       <SelectItem value="createdAt" className="text-zinc-900">Data de Criação</SelectItem>
                       <SelectItem value="title" className="text-zinc-900">Título</SelectItem>
                       <SelectItem value="year" className="text-zinc-900">Ano</SelectItem>
@@ -469,6 +482,9 @@ export default function AdminPage() {
                           <span>Ano: {film.year}</span>
                           <span>Duração: {film.duration}</span>
                           <span>Categoria: {film.category}</span>
+                          <span className="font-medium text-zinc-800">
+                            Ordem: {film.displayOrder ?? 0}
+                          </span>
                           <span className={film.isPublished ? 'text-green-600' : 'text-orange-600'}>
                             {film.isPublished ? 'Publicado' : 'Rascunho'}
                           </span>
@@ -755,20 +771,25 @@ export default function AdminPage() {
             {/* Ordem de Exibição */}
             <div className="space-y-2">
               <Label htmlFor="displayOrder" className="text-zinc-900">
-                Ordem de Exibição no Site *
+                Ordem de Exibição no Site
               </Label>
               <Input
                 id="displayOrder"
                 type="number"
-                value={formData.displayOrder}
-                onChange={(e) => setFormData({ ...formData, displayOrder: parseInt(e.target.value) || 0 })}
-                required
+                value={formData.displayOrder === 0 ? '' : formData.displayOrder}
+                onChange={(e) => {
+                  const value = e.target.value
+                  setFormData({ 
+                    ...formData, 
+                    displayOrder: value === '' ? 0 : parseInt(value) || 0 
+                  })
+                }}
                 min="0"
-                placeholder="0"
+                placeholder="Deixe vazio para aparecer por último"
                 className="text-zinc-900"
               />
               <p className="text-sm text-zinc-500">
-                Números menores aparecem primeiro. Use 0, 1, 2, 3... para ordenar os filmes.
+                Filmes com números <strong>maiores</strong> aparecerão primeiro no site. Deixe vazio (0) para aparecer por último.
               </p>
             </div>
 
