@@ -80,48 +80,73 @@ export async function GET(request: NextRequest) {
     }
 
     // Buscar filmes e ordenar manualmente para lidar com valores null
-    // Tratar erro de prepared statement tentando reconectar se necessário
+    // Tratar erro de prepared statement usando $queryRaw como fallback
     let films: any[] = [] // Inicializar como array vazio para evitar undefined
-    let retryCount = 0
-    const maxRetries = 2
     
-    while (retryCount <= maxRetries) {
-      try {
-        films = await prisma.film.findMany({
-          where,
-        })
-        break // Sucesso, sair do loop
-      } catch (queryError: any) {
-        // Verificar se é erro de prepared statement
-        const errorMessage = queryError?.message || String(queryError)
-        const errorCode = queryError?.code || (queryError as any)?.meta?.code
-        
-        const isPreparedStatementError = 
-          errorMessage.includes('prepared statement') ||
-          errorCode === '42P05' ||
-          (errorMessage.includes('42P05'))
-        
-        if (isPreparedStatementError && retryCount < maxRetries) {
-          console.warn(`Erro de prepared statement detectado (tentativa ${retryCount + 1}/${maxRetries}), tentando reconectar...`)
+    try {
+      // Tentar método normal primeiro
+      films = await prisma.film.findMany({
+        where,
+      })
+    } catch (queryError: any) {
+      // Verificar se é erro de prepared statement
+      const errorMessage = queryError?.message || String(queryError)
+      const errorCode = queryError?.code || (queryError as any)?.meta?.code
+      
+      const isPreparedStatementError = 
+        errorMessage.includes('prepared statement') ||
+        errorCode === '42P05' ||
+        (errorMessage.includes('42P05'))
+      
+      if (isPreparedStatementError) {
+        console.warn('Erro de prepared statement detectado, usando $queryRawUnsafe como fallback...')
+        try {
+          // Usar $queryRawUnsafe para evitar prepared statements
+          // Construir query SQL manualmente com validação de segurança
+          let sqlQuery = 'SELECT * FROM "Film"'
+          const conditions: string[] = []
+          
+          if (where.isPublished !== undefined) {
+            // Validar que é boolean para evitar SQL injection
+            const isPublished = where.isPublished === true ? 'true' : 'false'
+            conditions.push(`"isPublished" = ${isPublished}`)
+          }
+          
+          if (where.category) {
+            // Validar categoria (whitelist) para evitar SQL injection
+            const validCategories = ['Ficção', 'Drama', 'Documentário', 'Comercial']
+            if (validCategories.includes(where.category)) {
+              conditions.push(`"category" = '${where.category.replace(/'/g, "''")}'`)
+            }
+          }
+          
+          if (conditions.length > 0) {
+            sqlQuery += ' WHERE ' + conditions.join(' AND ')
+          }
+          
+          sqlQuery += ' ORDER BY "displayOrder" DESC NULLS LAST, "createdAt" DESC'
+          
+          // Executar query raw
+          const rawFilms = await prisma.$queryRawUnsafe<any[]>(sqlQuery)
+          films = Array.isArray(rawFilms) ? rawFilms : []
+          
+          console.log('Query raw executada com sucesso, filmes encontrados:', films.length)
+        } catch (rawError) {
+          console.error('Erro ao executar query raw:', rawError)
+          // Se $queryRaw também falhar, tentar desconectar e reconectar uma vez
           try {
             await prisma.$disconnect()
-            // Aguardar um pouco antes de reconectar
-            await new Promise(resolve => setTimeout(resolve, 100))
+            await new Promise(resolve => setTimeout(resolve, 500))
             await prisma.$connect()
-            retryCount++
-            continue // Tentar novamente
-          } catch (reconnectError) {
-            console.error('Erro ao reconectar:', reconnectError)
-            retryCount++
-            if (retryCount > maxRetries) {
-              throw queryError // Se não conseguir reconectar, lançar o erro original
-            }
-            continue
+            films = await prisma.film.findMany({ where })
+          } catch (finalError) {
+            console.error('Erro na tentativa final:', finalError)
+            films = []
           }
-        } else {
-          // Não é erro de prepared statement ou já tentou demais, lançar o erro
-          throw queryError
         }
+      } else {
+        // Não é erro de prepared statement, lançar o erro
+        throw queryError
       }
     }
 
