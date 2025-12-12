@@ -13,7 +13,7 @@ const filmSchema = z.object({
   year: z.number().int().min(1900).max(new Date().getFullYear() + 1),
   duration: z.string().regex(/^\d{2}:\d{2}:\d{2}$/, 'Duração deve estar no formato HH:MM:SS'),
   category: z.enum(['Ficção', 'Drama', 'Documentário', 'Comercial']),
-  type: z.enum(['Vídeo Clipe', 'Curta Metragem', 'Longa Metragem', 'Propaganda', 'Institucional']).optional(),
+  type: z.enum(['Vídeo Clipe', 'Curta Metragem', 'Longa Metragem', 'Propaganda', 'Institucional', 'Trailler', 'Em Desenvolvimento']).optional(),
   thumbnail: z.union([z.string().url(), z.literal('')]).optional(),
   videoUrl: z.string().url('URL do vídeo é obrigatória'),
   videoSize: z.union([z.number().int().positive(), z.undefined()]).optional(),

@@ -23,7 +23,7 @@ interface FilmData {
   year: number
   duration: string
   category: 'Ficção' | 'Drama' | 'Documentário' | 'Comercial'
-  type: 'Vídeo Clipe' | 'Curta Metragem' | 'Longa Metragem' | 'Propaganda' | 'Institucional' | ''
+  type: 'Vídeo Clipe' | 'Curta Metragem' | 'Longa Metragem' | 'Propaganda' | 'Institucional' | 'Trailler' | 'Em Desenvolvimento' | ''
   thumbnail: string
   thumbnailFile: File | null
   videoFile: File | null
@@ -1015,6 +1015,8 @@ export default function AdminPage() {
                   <SelectItem value="Longa Metragem" className="text-zinc-900">Longa Metragem</SelectItem>
                   <SelectItem value="Propaganda" className="text-zinc-900">Propaganda</SelectItem>
                   <SelectItem value="Institucional" className="text-zinc-900">Institucional</SelectItem>
+                  <SelectItem value="Trailler" className="text-zinc-900">Trailler</SelectItem>
+                  <SelectItem value="Em Desenvolvimento" className="text-zinc-900">Em Desenvolvimento</SelectItem>
                 </SelectContent>
               </Select>
             </div>

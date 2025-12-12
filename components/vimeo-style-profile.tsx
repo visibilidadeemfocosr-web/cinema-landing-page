@@ -44,6 +44,21 @@ export function VimeoStyleProfile() {
   const { t, language } = useI18n()
   const { films, loading, error } = useFilms(true) // Buscar apenas filmes publicados
   const { toast } = useToast()
+  
+  // Funções helper para traduzir categorias e tipos
+  const translateCategory = (category: string): string => {
+    if (t.vimeoProfile.categories && category in t.vimeoProfile.categories) {
+      return (t.vimeoProfile.categories as any)[category] || category
+    }
+    return category
+  }
+  
+  const translateType = (type: string): string => {
+    if (t.vimeoProfile.types && type in t.vimeoProfile.types) {
+      return (t.vimeoProfile.types as any)[type] || type
+    }
+    return type
+  }
 
   // Carregar banner configurável
   useEffect(() => {
@@ -163,9 +178,10 @@ export function VimeoStyleProfile() {
           if (data.name) setName(data.name)
           if (data.location) setLocation(data.location)
           if (data.pronouns) setPronouns(data.pronouns)
-          if (data.bioPt !== undefined) setBioPt(data.bioPt)
-          if (data.bioEn !== undefined) setBioEn(data.bioEn)
-          if (data.bioEs !== undefined) setBioEs(data.bioEs)
+          // Só atualizar se não for string vazia (strings vazias significam "usar tradução padrão")
+          if (data.bioPt !== undefined && data.bioPt !== null) setBioPt(data.bioPt || '')
+          if (data.bioEn !== undefined && data.bioEn !== null) setBioEn(data.bioEn || '')
+          if (data.bioEs !== undefined && data.bioEs !== null) setBioEs(data.bioEs || '')
           if (data.email) setEmail(data.email)
           if (data.instagramPersonal) setInstagramPersonal(data.instagramPersonal)
           if (data.instagramLombada) setInstagramLombada(data.instagramLombada)
@@ -180,6 +196,21 @@ export function VimeoStyleProfile() {
     const interval = setInterval(fetchBio, 5000)
     return () => clearInterval(interval)
   }, [])
+  
+  // Debug: Log quando idioma ou bio mudar
+  useEffect(() => {
+    const customBio = language === 'pt' ? bioPt : language === 'en' ? bioEn : bioEs
+    const hasCustomBio = customBio && typeof customBio === 'string' && customBio.trim() !== ''
+    console.log('Bio debug:', {
+      language,
+      bioPt: bioPt ? bioPt.substring(0, 50) + '...' : 'vazia',
+      bioEn: bioEn ? bioEn.substring(0, 50) + '...' : 'vazia',
+      bioEs: bioEs ? bioEs.substring(0, 50) + '...' : 'vazia',
+      customBio: customBio ? customBio.substring(0, 50) + '...' : 'vazia',
+      hasCustomBio,
+      usingDefault: !hasCustomBio
+    })
+  }, [language, bioPt, bioEn, bioEs])
   
   // Função para enviar mensagem
   const handleSendMessage = async () => {
@@ -908,11 +939,12 @@ export function VimeoStyleProfile() {
                 )}
 
                 {/* Bio */}
-                <div className="mb-4 text-xs sm:text-sm leading-relaxed text-zinc-700 text-center lg:text-left">
+                <div key={`bio-${language}`} className="mb-4 text-xs sm:text-sm leading-relaxed text-zinc-700 text-center lg:text-left">
                   {(() => {
                     // Usar bio customizada se disponível, senão usar tradução padrão
+                    // Verificar se há bio customizada para o idioma atual
                     const customBio = language === 'pt' ? bioPt : language === 'en' ? bioEn : bioEs
-                    const hasCustomBio = customBio && customBio.trim() !== ''
+                    const hasCustomBio = customBio && typeof customBio === 'string' && customBio.trim() !== ''
                     
                     if (hasCustomBio) {
                       // Se tem bio customizada, usar ela
@@ -926,7 +958,7 @@ export function VimeoStyleProfile() {
                             onClick={() => setShowFullBio(false)}
                             className="font-medium text-zinc-900 hover:underline mt-2"
                           >
-                            Ler menos
+                            {language === 'pt' ? 'Ler menos' : language === 'en' ? 'Read less' : 'Leer menos'}
                           </button>
                         </>
                       ) : (
@@ -945,7 +977,11 @@ export function VimeoStyleProfile() {
                         </>
                       )
                     } else {
-                      // Usar tradução padrão
+                      // Usar tradução padrão do arquivo de traduções
+                      const defaultBio = `${t.about.bio1} ${t.about.bio2} ${t.about.bio3}`
+                      const fullDefaultBio = `${defaultBio}\n${t.about.bio4}\n${t.about.bio5}`
+                      const bioLines = fullDefaultBio.split('\n').filter((line: string) => line.trim() !== '')
+                      
                       return showFullBio ? (
                         <>
                           <p className="mb-2">{t.about.bio1} <span className="font-medium text-zinc-900">{t.about.bio2}</span> {t.about.bio3}</p>
@@ -955,7 +991,7 @@ export function VimeoStyleProfile() {
                             onClick={() => setShowFullBio(false)}
                             className="font-medium text-zinc-900 hover:underline mt-2"
                           >
-                            Ler menos
+                            {language === 'pt' ? 'Ler menos' : language === 'en' ? 'Read less' : 'Leer menos'}
                           </button>
                         </>
                       ) : (
@@ -1200,12 +1236,12 @@ export function VimeoStyleProfile() {
                                        )}
                                        {film.category && (
                                          <span className={`inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium border ${getCategoryColors(film.category)}`}>
-                                           {film.category}
+                                           {translateCategory(film.category)}
                                          </span>
                                        )}
                                        {film.type && (
                                          <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200">
-                                           {film.type}
+                                           {translateType(film.type)}
                                          </span>
                                        )}
                             </>
