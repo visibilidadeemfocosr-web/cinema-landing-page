@@ -7,8 +7,10 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-import { Loader2, Upload, Film, Edit, Trash2, Plus, X, XCircle, ArrowUpDown, LogOut } from 'lucide-react'
+import { Loader2, Upload, Film, Edit, Trash2, Plus, X, XCircle, ArrowUpDown, LogOut, Image as ImageIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import Image from 'next/image'
 
 interface FilmData {
   id?: string
@@ -40,6 +42,14 @@ export default function AdminPage() {
   const [showForm, setShowForm] = useState(false)
   const [sortBy, setSortBy] = useState<'title' | 'year' | 'createdAt' | 'category' | 'displayOrder'>('displayOrder')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [activeTab, setActiveTab] = useState<'films' | 'banner'>('films')
+  const [bannerUrl, setBannerUrl] = useState<string>('/cinematic-film-production-background.jpeg')
+  const [bannerFile, setBannerFile] = useState<File | null>(null)
+  const [bannerLoading, setBannerLoading] = useState(false)
+  const [bannerPosition, setBannerPosition] = useState<string>('center')
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [imagePosition, setImagePosition] = useState({ x: 50, y: 50 }) // Percentuais (50% = center)
   const [formData, setFormData] = useState<FilmData>({
     title: '',
     titleEn: '',
@@ -410,6 +420,162 @@ export default function AdminPage() {
     }
   }
 
+  // Função para salvar banner
+  const handleBannerSave = async () => {
+    setBannerLoading(true)
+    try {
+      let bannerUrlToSave = bannerUrl
+
+      // Se tem arquivo, fazer upload
+      if (bannerFile) {
+        const formData = new FormData()
+        formData.append('file', bannerFile)
+
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        })
+
+        if (!uploadResponse.ok) {
+          throw new Error('Erro ao fazer upload do banner')
+        }
+
+        const uploadData = await uploadResponse.json()
+        bannerUrlToSave = uploadData.data.url
+      }
+
+      // Salvar configuração do banner
+      const response = await fetch('/api/settings/banner', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          bannerUrl: bannerUrlToSave,
+          bannerPosition: bannerPosition,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Erro ao salvar banner')
+      }
+
+      const responseData = await response.json()
+      if (responseData.success) {
+        setBannerUrl(bannerUrlToSave)
+        setBannerFile(null)
+        if (responseData.data?.bannerPosition) {
+          setBannerPosition(responseData.data.bannerPosition)
+        }
+        toast({
+          title: 'Sucesso!',
+          description: 'Banner atualizado com sucesso! Recarregue a página principal para ver as mudanças.',
+        })
+        // Forçar recarregamento da página principal (opcional)
+        // window.open('/', '_blank')
+      } else {
+        throw new Error(responseData.message || 'Erro ao salvar banner')
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao salvar banner',
+        variant: 'destructive',
+      })
+    } finally {
+      setBannerLoading(false)
+    }
+  }
+
+  // Converter posição de object-position para coordenadas percentuais
+  const parsePosition = (position: string) => {
+    // Se for formato percentual (ex: "30% 40%")
+    if (position.includes('%')) {
+      const parts = position.split(' ')
+      const x = parseFloat(parts[0]) || 50
+      const y = parseFloat(parts[1]) || 50
+      return { x, y }
+    }
+    // Se for nome de posição
+    const positions: Record<string, { x: number, y: number }> = {
+      'center': { x: 50, y: 50 },
+      'top': { x: 50, y: 0 },
+      'bottom': { x: 50, y: 100 },
+      'left': { x: 0, y: 50 },
+      'right': { x: 100, y: 50 },
+      'top left': { x: 0, y: 0 },
+      'top right': { x: 100, y: 0 },
+      'bottom left': { x: 0, y: 100 },
+      'bottom right': { x: 100, y: 100 },
+    }
+    return positions[position] || { x: 50, y: 50 }
+  }
+
+  // Converter coordenadas percentuais para object-position
+  const positionToObjectPosition = (x: number, y: number): string => {
+    // Se estiver muito próximo de valores padrão, usar nomes
+    if (x >= 45 && x <= 55 && y >= 45 && y <= 55) return 'center'
+    if (x >= 45 && x <= 55 && y <= 10) return 'top'
+    if (x >= 45 && x <= 55 && y >= 90) return 'bottom'
+    if (x <= 10 && y >= 45 && y <= 55) return 'left'
+    if (x >= 90 && y >= 45 && y <= 55) return 'right'
+    if (x <= 10 && y <= 10) return 'top left'
+    if (x >= 90 && y <= 10) return 'top right'
+    if (x <= 10 && y >= 90) return 'bottom left'
+    if (x >= 90 && y >= 90) return 'bottom right'
+    // Caso contrário, usar percentuais
+    return `${x}% ${y}%`
+  }
+
+  // Handlers para drag
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    setIsDragging(true)
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100))
+    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100))
+    setImagePosition({ x, y })
+    const newPosition = positionToObjectPosition(x, y)
+    setBannerPosition(newPosition)
+  }
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100))
+    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100))
+    setImagePosition({ x, y })
+    const newPosition = positionToObjectPosition(x, y)
+    setBannerPosition(newPosition)
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
+
+  // Carregar configuração do banner
+  useEffect(() => {
+    const fetchBanner = async () => {
+      try {
+        const response = await fetch('/api/settings/banner')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.bannerUrl) {
+            setBannerUrl(data.bannerUrl)
+          }
+          if (data.bannerPosition) {
+            setBannerPosition(data.bannerPosition)
+            // Converter posição para coordenadas
+            const pos = parsePosition(data.bannerPosition)
+            setImagePosition(pos)
+          }
+        }
+      } catch (error) {
+        // Ignorar erro, usar padrão
+      }
+    }
+    fetchBanner()
+  }, [])
+
   return (
     <div className="min-h-screen bg-white py-12 px-4">
       <div className="max-w-6xl mx-auto">
@@ -417,30 +583,10 @@ export default function AdminPage() {
           <div>
             <h1 className="text-4xl font-bold text-zinc-900 mb-2 flex items-center gap-3">
               <Film className="h-10 w-10" />
-              Gerenciar Filmes
+              Painel Administrativo
             </h1>
-            <p className="text-zinc-600">Gerencie seus filmes e vídeos</p>
+            <p className="text-zinc-600">Gerencie seu site</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={() => {
-                resetForm()
-                setShowForm(!showForm)
-              }}
-              className="flex items-center gap-2"
-            >
-            {showForm ? (
-              <>
-                <X className="h-4 w-4" />
-                Cancelar
-              </>
-            ) : (
-              <>
-                <Plus className="h-4 w-4" />
-                Adicionar Filme
-              </>
-            )}
-          </Button>
           <Button
             onClick={handleLogout}
             variant="outline"
@@ -449,8 +595,43 @@ export default function AdminPage() {
             <LogOut className="h-4 w-4" />
             Sair
           </Button>
-          </div>
         </div>
+
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'films' | 'banner')} className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="films" className="flex items-center gap-2">
+              <Film className="h-4 w-4" />
+              Filmes
+            </TabsTrigger>
+            <TabsTrigger value="banner" className="flex items-center gap-2">
+              <ImageIcon className="h-4 w-4" />
+              Banner
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="films" className="space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-zinc-900">Gerenciar Filmes</h2>
+              <Button
+                onClick={() => {
+                  resetForm()
+                  setShowForm(!showForm)
+                }}
+                className="flex items-center gap-2"
+              >
+                {showForm ? (
+                  <>
+                    <X className="h-4 w-4" />
+                    Cancelar
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Adicionar Filme
+                  </>
+                )}
+              </Button>
+            </div>
 
         {/* Lista de Filmes */}
         {!showForm && (
@@ -558,8 +739,8 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Formulário */}
-        {showForm && (
+            {/* Formulário */}
+            {showForm && (
           <form onSubmit={handleSubmit} className="space-y-6 border border-zinc-200 rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold text-zinc-900">
@@ -873,7 +1054,251 @@ export default function AdminPage() {
               </Button>
             </div>
           </form>
-        )}
+            )}
+          </TabsContent>
+
+          <TabsContent value="banner" className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold text-zinc-900 mb-4">Editar Banner</h2>
+              <p className="text-zinc-600 mb-6">Altere a imagem do banner principal do site</p>
+
+              <div className="space-y-6 border border-zinc-200 rounded-lg p-6">
+                {/* Preview do Banner Atual */}
+                <div className="space-y-2">
+                  <Label className="text-zinc-900">Banner Atual - Arraste para reposicionar</Label>
+                  <div 
+                    className="relative w-full h-64 rounded-lg overflow-hidden border-2 border-zinc-300 bg-zinc-100 cursor-move"
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                    style={{ userSelect: 'none' }}
+                  >
+                    {bannerFile ? (
+                      <img
+                        src={URL.createObjectURL(bannerFile)}
+                        alt="Preview do banner"
+                        className="w-full h-full object-cover pointer-events-none"
+                        style={{ objectPosition: `${imagePosition.x}% ${imagePosition.y}%` }}
+                        draggable={false}
+                      />
+                    ) : (
+                      <img
+                        src={bannerUrl}
+                        alt="Banner atual"
+                        className="w-full h-full object-cover pointer-events-none"
+                        style={{ objectPosition: `${imagePosition.x}% ${imagePosition.y}%` }}
+                        draggable={false}
+                        onError={(e) => {
+                          e.currentTarget.src = '/cinematic-film-production-background.jpeg'
+                        }}
+                      />
+                    )}
+                    {/* Indicador de posição */}
+                    <div 
+                      className="absolute w-4 h-4 rounded-full border-2 border-white bg-oklch(0.58 0.15 35) shadow-lg pointer-events-none z-10"
+                      style={{ 
+                        left: `${imagePosition.x}%`, 
+                        top: `${imagePosition.y}%`,
+                        transform: 'translate(-50%, -50%)',
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs text-zinc-500">
+                    Clique e arraste a imagem para reposicioná-la. Posição: {imagePosition.x.toFixed(0)}% {imagePosition.y.toFixed(0)}%
+                  </p>
+                </div>
+
+                {/* Upload de Nova Imagem */}
+                <div className="space-y-2">
+                  <Label htmlFor="bannerFile" className="text-zinc-900">Upload de Nova Imagem</Label>
+                  <Input
+                    id="bannerFile"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/jpg"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        setBannerFile(file)
+                      }
+                    }}
+                    className="cursor-pointer text-zinc-900 file:text-zinc-900"
+                  />
+                  {bannerFile && (
+                    <p className="text-sm text-zinc-600">
+                      Arquivo selecionado: {bannerFile.name} ({(bannerFile.size / (1024 * 1024)).toFixed(2)} MB)
+                    </p>
+                  )}
+                </div>
+
+                {/* URL do Banner */}
+                <div className="space-y-2">
+                  <Label htmlFor="bannerUrl" className="text-zinc-900">Ou forneça uma URL</Label>
+                  <Input
+                    id="bannerUrl"
+                    type="url"
+                    value={bannerUrl}
+                    onChange={(e) => {
+                      setBannerUrl(e.target.value)
+                      setBannerFile(null)
+                    }}
+                    placeholder="https://exemplo.com/banner.jpg"
+                    className="text-zinc-900"
+                  />
+                  <p className="text-sm text-zinc-500">
+                    Se fornecer uma URL, o upload será ignorado
+                  </p>
+                </div>
+
+                {/* Posicionamento do Banner - Presets Rápidos */}
+                <div className="space-y-2">
+                  <Label className="text-zinc-900">Presets Rápidos (ou use o arraste acima)</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      type="button"
+                      variant={bannerPosition === 'top left' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setBannerPosition('top left')
+                        setImagePosition({ x: 0, y: 0 })
+                      }}
+                    >
+                      Topo Esquerda
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={bannerPosition === 'top' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setBannerPosition('top')
+                        setImagePosition({ x: 50, y: 0 })
+                      }}
+                    >
+                      Topo
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={bannerPosition === 'top right' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setBannerPosition('top right')
+                        setImagePosition({ x: 100, y: 0 })
+                      }}
+                    >
+                      Topo Direita
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={bannerPosition === 'left' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setBannerPosition('left')
+                        setImagePosition({ x: 0, y: 50 })
+                      }}
+                    >
+                      Esquerda
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={bannerPosition === 'center' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setBannerPosition('center')
+                        setImagePosition({ x: 50, y: 50 })
+                      }}
+                    >
+                      Centro
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={bannerPosition === 'right' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setBannerPosition('right')
+                        setImagePosition({ x: 100, y: 50 })
+                      }}
+                    >
+                      Direita
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={bannerPosition === 'bottom left' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setBannerPosition('bottom left')
+                        setImagePosition({ x: 0, y: 100 })
+                      }}
+                    >
+                      Inferior Esquerda
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={bannerPosition === 'bottom' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setBannerPosition('bottom')
+                        setImagePosition({ x: 50, y: 100 })
+                      }}
+                    >
+                      Inferior
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={bannerPosition === 'bottom right' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setBannerPosition('bottom right')
+                        setImagePosition({ x: 100, y: 100 })
+                      }}
+                    >
+                      Inferior Direita
+                    </Button>
+                  </div>
+                  <p className="text-xs text-zinc-400 mt-2">
+                    Posição atual: <strong>{bannerPosition}</strong> ({imagePosition.x.toFixed(0)}%, {imagePosition.y.toFixed(0)}%)
+                  </p>
+                </div>
+
+                {/* Botão Salvar */}
+                <div className="flex gap-4 pt-4">
+                  <Button
+                    onClick={handleBannerSave}
+                    disabled={bannerLoading}
+                    className="flex-1"
+                    size="lg"
+                  >
+                    {bannerLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Salvar Banner
+                      </>
+                    )}
+                  </Button>
+                  {bannerFile && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setBannerFile(null)
+                        const fileInput = document.getElementById('bannerFile') as HTMLInputElement
+                        if (fileInput) fileInput.value = ''
+                      }}
+                      size="lg"
+                    >
+                      <X className="mr-2 h-4 w-4" />
+                      Cancelar
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   )

@@ -147,6 +147,17 @@ Após adicionar os registros DNS:
 - Pode levar até 48 horas para propagar (geralmente 1-2 horas)
 - A Vercel mostrará o status: "Valid Configuration" quando estiver correto
 
+### 📖 Guia Detalhado para Registro.br
+
+**Para domínios `.br` registrados no Registro.br**, consulte o guia completo:
+👉 **[CONFIGURAR-REGISTRO-BR.md](./CONFIGURAR-REGISTRO-BR.md)**
+
+Este guia inclui:
+- Passo a passo detalhado para o painel do Registro.br
+- Como configurar registros A e CNAME
+- Como verificar propagação DNS
+- Solução de problemas comuns
+
 ## ✅ Passo 7: Verificar Deploy
 
 1. Acesse a URL fornecida pela Vercel (ex: `cinema-landing-page.vercel.app`)

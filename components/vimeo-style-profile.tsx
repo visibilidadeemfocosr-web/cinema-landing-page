@@ -14,8 +14,38 @@ export function VimeoStyleProfile() {
   const [showAll, setShowAll] = useState(false)
   const [showFullBio, setShowFullBio] = useState(false)
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null)
+  const [bannerUrl, setBannerUrl] = useState<string>('/cinematic-film-production-background.jpeg')
+  const [bannerPosition, setBannerPosition] = useState<string>('center')
   const { t } = useI18n()
   const { films, loading, error } = useFilms(true) // Buscar apenas filmes publicados
+
+  // Carregar banner configurável
+  useEffect(() => {
+    const fetchBanner = async () => {
+      try {
+        // Adicionar timestamp para evitar cache
+        const response = await fetch(`/api/settings/banner?t=${Date.now()}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.bannerUrl) {
+            setBannerUrl(data.bannerUrl)
+          }
+          if (data.bannerPosition) {
+            setBannerPosition(data.bannerPosition)
+            console.log('Banner position carregado:', data.bannerPosition)
+          }
+        }
+      } catch (error) {
+        // Ignorar erro, usar padrão
+        console.error('Erro ao carregar banner:', error)
+      }
+    }
+    fetchBanner()
+    
+    // Recarregar a cada 5 segundos para pegar atualizações
+    const interval = setInterval(fetchBanner, 5000)
+    return () => clearInterval(interval)
+  }, [])
   
   // Debug em desenvolvimento
   useEffect(() => {
@@ -45,7 +75,7 @@ export function VimeoStyleProfile() {
   return (
     <div className="min-h-screen bg-white text-zinc-900 relative overflow-x-hidden">
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+        <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">
           <defs>
             {/* Gradientes terracotta */}
             <linearGradient id="terracottaGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -337,150 +367,215 @@ export function VimeoStyleProfile() {
           />
 
 
-          {/* ========== CÍRCULOS ANIMADOS ========== */}
+          {/* ========== LINHAS VERTICAIS SUTIS ========== */}
           
-          {/* Círculo pequeno superior esquerda */}
-          <circle
-            cx="20%"
-            cy="10%"
-            r="10"
-            stroke="oklch(0.58 0.15 35)"
-            strokeWidth="2"
-            fill="none"
-            opacity="0.7"
-            className="animate-circle-pulse"
+          {/* Linha vertical 5% */}
+          <line
+            x1="5%"
+            y1="0%"
+            x2="5%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
           />
 
-          {/* Círculo médio meio direita */}
-          <circle
-            cx="80%"
-            cy="40%"
-            r="14"
-            stroke="oklch(0.65 0.18 30)"
-            strokeWidth="2"
-            fill="none"
-            opacity="0.7"
-            className="animate-circle-pulse"
+          {/* Linha vertical 10% */}
+          <line
+            x1="10%"
+            y1="0%"
+            x2="10%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
           />
 
-          {/* Círculo pequeno inferior esquerda */}
-          <circle
-            cx="15%"
-            cy="80%"
-            r="8"
-            stroke="oklch(0.62 0.16 38)"
-            strokeWidth="2"
-            fill="none"
-            opacity="0.7"
-            className="animate-circle-pulse animate-circle-rotate"
+          {/* Linha vertical 15% */}
+          <line
+            x1="15%"
+            y1="0%"
+            x2="15%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
           />
 
-          {/* Círculo médio centro */}
-          <circle
-            cx="50%"
-            cy="65%"
-            r="12"
-            stroke="oklch(0.58 0.15 35)"
-            strokeWidth="2"
-            fill="none"
-            opacity="0.65"
-            className="animate-circle-pulse"
+          {/* Linha vertical 20% */}
+          <line
+            x1="20%"
+            y1="0%"
+            x2="20%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
           />
 
-          {/* Círculo grande direita inferior */}
-          <circle
-            cx="85%"
-            cy="75%"
-            r="18"
-            stroke="oklch(0.52 0.12 45)"
-            strokeWidth="2"
-            fill="none"
-            opacity="0.65"
-            className="animate-circle-pulse animate-circle-rotate"
+          {/* Linha vertical 25% */}
+          <line
+            x1="25%"
+            y1="0%"
+            x2="25%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
           />
 
-          {/* Círculo pequeno superior direita */}
-          <circle
-            cx="75%"
-            cy="15%"
-            r="9"
-            stroke="oklch(0.58 0.15 35)"
-            strokeWidth="2"
-            fill="none"
-            opacity="0.7"
-            className="animate-circle-pulse"
+          {/* Linha vertical 30% */}
+          <line
+            x1="30%"
+            y1="0%"
+            x2="30%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
           />
 
-          {/* Círculo médio centro superior */}
-          <circle
-            cx="45%"
-            cy="25%"
-            r="11"
-            stroke="oklch(0.65 0.18 30)"
-            strokeWidth="2"
-            fill="none"
-            opacity="0.65"
-            className="animate-circle-pulse animate-circle-rotate"
+          {/* Linha vertical 35% */}
+          <line
+            x1="35%"
+            y1="0%"
+            x2="35%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
           />
 
-          {/* Círculo pequeno meio esquerda */}
-          <circle
-            cx="25%"
-            cy="55%"
-            r="7"
-            stroke="oklch(0.62 0.16 38)"
-            strokeWidth="2"
-            fill="none"
-            opacity="0.7"
-            className="animate-circle-pulse"
+          {/* Linha vertical 40% */}
+          <line
+            x1="40%"
+            y1="0%"
+            x2="40%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
           />
 
-          {/* Círculo médio centro direito */}
-          <circle
-            cx="65%"
-            cy="60%"
-            r="13"
-            stroke="oklch(0.58 0.15 35)"
-            strokeWidth="2"
-            fill="none"
-            opacity="0.6"
-            className="animate-circle-pulse animate-circle-rotate"
+          {/* Linha vertical 45% */}
+          <line
+            x1="45%"
+            y1="0%"
+            x2="45%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
           />
 
-          {/* Círculo pequeno inferior direita */}
-          <circle
-            cx="70%"
-            cy="90%"
-            r="6"
-            stroke="oklch(0.65 0.18 30)"
-            strokeWidth="2"
-            fill="none"
-            opacity="0.7"
-            className="animate-circle-pulse"
+          {/* Linha vertical 50% */}
+          <line
+            x1="50%"
+            y1="0%"
+            x2="50%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
           />
 
-          {/* Círculo médio superior esquerda */}
-          <circle
-            cx="10%"
-            cy="30%"
-            r="10"
-            stroke="oklch(0.52 0.12 45)"
-            strokeWidth="2"
-            fill="none"
-            opacity="0.65"
-            className="animate-circle-pulse animate-circle-rotate"
+          {/* Linha vertical 55% */}
+          <line
+            x1="55%"
+            y1="0%"
+            x2="55%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
           />
 
-          {/* Círculo pequeno centro */}
-          <circle
-            cx="55%"
-            cy="45%"
-            r="8"
-            stroke="oklch(0.62 0.16 38)"
-            strokeWidth="2"
-            fill="none"
-            opacity="0.7"
-            className="animate-circle-pulse"
+          {/* Linha vertical 60% */}
+          <line
+            x1="60%"
+            y1="0%"
+            x2="60%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
+          />
+
+          {/* Linha vertical 65% */}
+          <line
+            x1="65%"
+            y1="0%"
+            x2="65%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
+          />
+
+          {/* Linha vertical 70% */}
+          <line
+            x1="70%"
+            y1="0%"
+            x2="70%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
+          />
+
+          {/* Linha vertical 75% */}
+          <line
+            x1="75%"
+            y1="0%"
+            x2="75%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
+          />
+
+          {/* Linha vertical 80% */}
+          <line
+            x1="80%"
+            y1="0%"
+            x2="80%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
+          />
+
+          {/* Linha vertical 85% */}
+          <line
+            x1="85%"
+            y1="0%"
+            x2="85%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
+          />
+
+          {/* Linha vertical 90% */}
+          <line
+            x1="90%"
+            y1="0%"
+            x2="90%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
+          />
+
+          {/* Linha vertical 95% */}
+          <line
+            x1="95%"
+            y1="0%"
+            x2="95%"
+            y2="100%"
+            stroke="oklch(0.85 0 0)"
+            strokeWidth="0.1"
+            opacity="0.1"
           />
         </svg>
       </div>
@@ -511,14 +606,20 @@ export function VimeoStyleProfile() {
 
         {/* Hero Banner */}
         <div className="relative h-[200px] sm:h-[240px] lg:h-[280px] overflow-hidden bg-gradient-to-br from-zinc-100 to-zinc-200">
-          <Image
-            src="/cinematic-film-production-background.jpeg"
-            alt="Banner"
-            fill
-            className="object-cover opacity-80"
-            sizes="100vw"
-            priority
-          />
+            <Image
+              src={bannerUrl}
+              alt="Banner"
+              fill
+              className="object-cover opacity-80"
+              style={{ 
+                objectPosition: bannerPosition,
+              }}
+              sizes="100vw"
+              priority
+              onError={(e) => {
+                e.currentTarget.src = '/cinematic-film-production-background.jpeg'
+              }}
+            />
         </div>
 
         {/* Main Content */}
