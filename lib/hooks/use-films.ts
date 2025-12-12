@@ -59,11 +59,36 @@ export function useFilms(published?: boolean, category?: string) {
 
         const data = await response.json()
 
-        if (data.success && Array.isArray(data.data)) {
-          setFilms(data.data)
-        } else {
+        // Log para debug
+        console.log('useFilms - API Response:', {
+          success: data.success,
+          hasData: !!data.data,
+          dataIsArray: Array.isArray(data.data),
+          dataLength: Array.isArray(data.data) ? data.data.length : 0,
+          message: data.message,
+          error: data.error
+        })
+
+        // Se tiver dados, usar mesmo que tenha mensagem de erro
+        if (data.data && Array.isArray(data.data)) {
+          if (data.data.length > 0) {
+            setFilms(data.data)
+            setError(null) // Limpar erro se tiver dados
+          } else {
+            // Array vazio - pode ser que realmente não há filmes ou houve erro
+            setFilms([])
+            if (data.message && data.message.includes('Erro')) {
+              setError(data.message)
+            }
+          }
+        } else if (data.success === false) {
           setError(data.message || 'Erro ao carregar filmes')
-          setFilms([]) // Garantir que films seja um array vazio em caso de erro
+          setFilms([])
+        } else {
+          // Caso inesperado
+          console.warn('Resposta da API em formato inesperado:', data)
+          setFilms([])
+          setError('Formato de resposta inesperado')
         }
       } catch (err) {
         console.error('Erro ao carregar filmes:', err)
