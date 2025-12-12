@@ -621,7 +621,7 @@ export function VimeoStyleProfile() {
             strokeWidth="2.5"
             strokeLinecap="round"
             fill="none"
-            opacity="0.7"
+            opacity="0.1"
           />
 
           {/* Linha quebrada orgânica meio - trajetória livre */}
@@ -631,7 +631,7 @@ export function VimeoStyleProfile() {
             strokeWidth="2.5"
             strokeLinecap="round"
             fill="none"
-            opacity="0.7"
+            opacity="0.1"
           />
 
 
@@ -1115,7 +1115,18 @@ export function VimeoStyleProfile() {
               <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
                 <div>
                   <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-zinc-800">{t.vimeoProfile.portfolio}</h2>
-                  <div className="h-0.5 mt-2 bg-accent" style={{ width: '100%', maxWidth: '200px' }}></div>
+                  <div className="mt-2" style={{ width: '100%', maxWidth: '200px' }}>
+                    <svg width="100%" height="8" viewBox="0 0 200 8" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        d="M 0 4 L 20 2 L 40 6 L 60 1 L 80 5 L 100 3 L 120 7 L 140 2 L 160 6 L 180 4 L 200 5"
+                        stroke="oklch(0.58 0.15 35)"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        fill="none"
+                      />
+                    </svg>
+                  </div>
                 </div>
                 {!loading && allVideosToDisplay.length > 0 && (
                   <span className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-oklch(0.96 0.02 35) text-oklch(0.55 0.12 35) border border-oklch(0.90 0.04 35) self-start sm:self-auto">
