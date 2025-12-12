@@ -39,6 +39,34 @@ export async function GET(request: NextRequest) {
       where.category = category
     }
 
+    // Verificar se Prisma está disponível
+    if (!prisma) {
+      console.error('Prisma Client não está disponível')
+      // Retornar array vazio em vez de erro para não quebrar a página
+      return NextResponse.json(
+        { 
+          success: true, 
+          data: [],
+          message: 'Prisma Client não inicializado - retornando array vazio'
+        },
+        { status: 200 }
+      )
+    }
+
+    // Verificar se DATABASE_URL está configurado
+    if (!process.env.DATABASE_URL) {
+      console.error('DATABASE_URL não está configurado')
+      // Retornar array vazio em vez de erro
+      return NextResponse.json(
+        { 
+          success: true, 
+          data: [],
+          message: 'DATABASE_URL não configurado - retornando array vazio'
+        },
+        { status: 200 }
+      )
+    }
+
     // Buscar filmes e ordenar manualmente para lidar com valores null
     const films = await prisma.film.findMany({
       where,
@@ -70,9 +98,29 @@ export async function GET(request: NextRequest) {
     )
   } catch (error) {
     console.error('Erro ao listar filmes:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+    const errorStack = error instanceof Error ? error.stack : undefined
+    
+    // Log detalhado em produção também para debug
+    if (error instanceof Error) {
+      console.error('Erro detalhado:', {
+        message: error.message,
+        name: error.name,
+        ...(errorStack && { stack: errorStack.substring(0, 500) }) // Limitar tamanho do stack
+      })
+    }
+    
+    // Em caso de erro, retornar array vazio em vez de erro 500 para não quebrar a página
+    // Isso permite que a página carregue mesmo se houver problema com o banco
     return NextResponse.json(
-      { success: false, message: 'Erro ao buscar filmes' },
-      { status: 500 }
+      { 
+        success: true, 
+        data: [],
+        message: 'Erro ao buscar filmes - retornando array vazio',
+        error: errorMessage,
+        ...(process.env.NODE_ENV === 'development' && errorStack && { stack: errorStack })
+      },
+      { status: 200 } // Retornar 200 com array vazio em vez de 500
     )
   }
 }
