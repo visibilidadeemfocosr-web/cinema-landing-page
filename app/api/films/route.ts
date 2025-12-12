@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
 
     // Buscar filmes e ordenar manualmente para lidar com valores null
     // Tratar erro de prepared statement tentando reconectar se necessário
-    let films
+    let films: any[] = [] // Inicializar como array vazio para evitar undefined
     let retryCount = 0
     const maxRetries = 2
     
