@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-import { Loader2, Upload, Film, Edit, Trash2, Plus, X, XCircle, ArrowUpDown, LogOut, Image as ImageIcon } from 'lucide-react'
+import { Loader2, Upload, Film, Edit, Trash2, Plus, X, XCircle, ArrowUpDown, LogOut, Image as ImageIcon, User } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import Image from 'next/image'
@@ -42,7 +42,7 @@ export default function AdminPage() {
   const [showForm, setShowForm] = useState(false)
   const [sortBy, setSortBy] = useState<'title' | 'year' | 'createdAt' | 'category' | 'displayOrder'>('displayOrder')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-  const [activeTab, setActiveTab] = useState<'films' | 'banner'>('films')
+  const [activeTab, setActiveTab] = useState<'films' | 'banner' | 'bio'>('films')
   const [bannerUrl, setBannerUrl] = useState<string>('/cinematic-film-production-background.jpeg')
   const [bannerFile, setBannerFile] = useState<File | null>(null)
   const [bannerLoading, setBannerLoading] = useState(false)
@@ -51,6 +51,20 @@ export default function AdminPage() {
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [imagePosition, setImagePosition] = useState({ x: 50, y: 50 }) // Percentuais (50% = center)
+  
+  // Estados para Bio
+  const [bioLoading, setBioLoading] = useState(false)
+  const [profileImage, setProfileImage] = useState<string>('/images/alicestamato.jpeg')
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null)
+  const [name, setName] = useState<string>('Alice Stamato')
+  const [location, setLocation] = useState<string>('São Paulo, SP, Brasil')
+  const [pronouns, setPronouns] = useState<string>('she/her')
+  const [bioPt, setBioPt] = useState<string>('')
+  const [bioEn, setBioEn] = useState<string>('')
+  const [bioEs, setBioEs] = useState<string>('')
+  const [email, setEmail] = useState<string>('alicestamato@gmail.com')
+  const [instagramPersonal, setInstagramPersonal] = useState<string>('alicestamato')
+  const [instagramLombada, setInstagramLombada] = useState<string>('lombadafilmes')
   const [formData, setFormData] = useState<FilmData>({
     title: '',
     titleEn: '',
@@ -560,6 +574,85 @@ export default function AdminPage() {
     setIsDragging(false)
   }
 
+  // Função para salvar bio
+  const handleBioSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setBioLoading(true)
+
+    try {
+      let profileImageUrl = profileImage
+
+      // Se tem arquivo de foto, fazer upload primeiro (prioridade sobre URL)
+      if (profileImageFile) {
+        const formData = new FormData()
+        formData.append('file', profileImageFile)
+        formData.append('type', 'thumbnail') // Usar pasta thumbnails para fotos de perfil
+
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        })
+
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json().catch(() => ({}))
+          throw new Error(errorData.message || 'Erro ao fazer upload da foto')
+        }
+
+        const uploadData = await uploadResponse.json()
+        if (uploadData.success && uploadData.data?.url) {
+          profileImageUrl = uploadData.data.url
+        } else {
+          throw new Error('Erro ao fazer upload da foto: resposta inválida')
+        }
+      } else if (!profileImage || profileImage.trim() === '' || profileImage === '/images/alicestamato.jpeg') {
+        // Se não tem arquivo e não tem URL válida, manter a atual
+        profileImageUrl = profileImage || '/images/alicestamato.jpeg'
+      }
+
+      // Salvar configuração da bio
+      const response = await fetch('/api/settings/bio', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          profileImage: profileImageUrl,
+          name: name.trim(),
+          location: location.trim(),
+          pronouns: pronouns.trim(),
+          bioPt: bioPt.trim(),
+          bioEn: bioEn.trim(),
+          bioEs: bioEs.trim(),
+          email: email.trim(),
+          instagramPersonal: instagramPersonal.trim(),
+          instagramLombada: instagramLombada.trim(),
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Erro ao salvar bio')
+      }
+
+      const responseData = await response.json()
+      if (responseData.success) {
+        setProfileImage(profileImageUrl)
+        setProfileImageFile(null)
+        toast({
+          title: 'Sucesso!',
+          description: 'Bio atualizada com sucesso! Recarregue a página principal para ver as mudanças.',
+        })
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao salvar bio',
+        variant: 'destructive',
+      })
+    } finally {
+      setBioLoading(false)
+    }
+  }
+
   // Carregar configuração do banner
   useEffect(() => {
     const fetchBanner = async () => {
@@ -584,6 +677,31 @@ export default function AdminPage() {
     fetchBanner()
   }, [])
 
+  // Carregar configuração da bio
+  useEffect(() => {
+    const fetchBio = async () => {
+      try {
+        const response = await fetch('/api/settings/bio')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.profileImage) setProfileImage(data.profileImage)
+          if (data.name) setName(data.name)
+          if (data.location) setLocation(data.location)
+          if (data.pronouns) setPronouns(data.pronouns)
+          if (data.bioPt !== undefined) setBioPt(data.bioPt)
+          if (data.bioEn !== undefined) setBioEn(data.bioEn)
+          if (data.bioEs !== undefined) setBioEs(data.bioEs)
+          if (data.email) setEmail(data.email)
+          if (data.instagramPersonal) setInstagramPersonal(data.instagramPersonal)
+          if (data.instagramLombada) setInstagramLombada(data.instagramLombada)
+        }
+      } catch (error) {
+        console.error('Erro ao carregar bio:', error)
+      }
+    }
+    fetchBio()
+  }, [])
+
   return (
     <div className="min-h-screen bg-white py-12 px-4">
       <div className="max-w-6xl mx-auto">
@@ -605,8 +723,8 @@ export default function AdminPage() {
           </Button>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'films' | 'banner')} className="w-full">
-          <TabsList className="mb-6">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'films' | 'banner' | 'bio')} className="w-full">
+          <TabsList className="mb-6 grid grid-cols-3">
             <TabsTrigger value="films" className="flex items-center gap-2">
               <Film className="h-4 w-4" />
               Filmes
@@ -614,6 +732,10 @@ export default function AdminPage() {
             <TabsTrigger value="banner" className="flex items-center gap-2">
               <ImageIcon className="h-4 w-4" />
               Banner
+            </TabsTrigger>
+            <TabsTrigger value="bio" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Bio
             </TabsTrigger>
           </TabsList>
 
@@ -1373,6 +1495,264 @@ export default function AdminPage() {
                   )}
                 </div>
               </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="bio" className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold text-zinc-900 mb-4">Ajustar Bio</h2>
+              <p className="text-zinc-600 mb-6">Edite as informações do perfil que aparecem na página principal</p>
+
+              <form onSubmit={handleBioSave} className="space-y-6 border border-zinc-200 rounded-lg p-6">
+                {/* Foto do Perfil */}
+                <div className="space-y-2">
+                  <Label htmlFor="profileImageFile" className="text-zinc-900">Foto do Perfil</Label>
+                  <div className="flex items-center gap-4">
+                    <Input
+                      id="profileImageFile"
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          setProfileImageFile(file)
+                        }
+                      }}
+                      className="cursor-pointer text-zinc-900 file:text-zinc-900"
+                    />
+                    {profileImageFile && (
+                      <span className="text-sm text-zinc-600">
+                        {(profileImageFile.size / (1024 * 1024)).toFixed(2)} MB
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Preview da Foto */}
+                  {(profileImageFile || profileImage) && (
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm text-zinc-600">Preview:</p>
+                        {profileImageFile && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setProfileImageFile(null)
+                              const fileInput = document.getElementById('profileImageFile') as HTMLInputElement
+                              if (fileInput) fileInput.value = ''
+                            }}
+                            className="text-red-600 hover:text-red-700 hover:border-red-300"
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Remover
+                          </Button>
+                        )}
+                      </div>
+                      <div className="relative w-32 h-32 rounded-full overflow-hidden border border-zinc-200 bg-zinc-100">
+                        {profileImageFile ? (
+                          <img
+                            src={URL.createObjectURL(profileImageFile)}
+                            alt="Preview da foto"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <img
+                            src={profileImage}
+                            alt="Preview da foto"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = '/images/alicestamato.jpeg'
+                            }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <p className="text-sm text-zinc-500">
+                    Ou forneça uma URL da foto abaixo {profileImageFile && '(o arquivo acima terá prioridade)'}
+                  </p>
+                  <Input
+                    id="profileImage"
+                    type="url"
+                    value={profileImage}
+                    onChange={(e) => {
+                      setProfileImage(e.target.value)
+                      // Limpar arquivo selecionado quando URL é fornecida
+                      setProfileImageFile(null)
+                      const fileInput = document.getElementById('profileImageFile') as HTMLInputElement
+                      if (fileInput) fileInput.value = ''
+                    }}
+                    placeholder="https://exemplo.com/foto.jpg"
+                    className={`text-zinc-900 ${profileImageFile ? 'opacity-50' : ''}`}
+                    disabled={!!profileImageFile}
+                  />
+                  {profileImageFile && (
+                    <p className="text-xs text-amber-600 mt-1">
+                      ⚠️ O arquivo selecionado será usado. A URL será ignorada.
+                    </p>
+                  )}
+                </div>
+
+                {/* Nome */}
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-zinc-900">Nome *</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    placeholder="Nome completo"
+                    className="text-zinc-900"
+                  />
+                </div>
+
+                {/* Localização */}
+                <div className="space-y-2">
+                  <Label htmlFor="location" className="text-zinc-900">Localização *</Label>
+                  <Input
+                    id="location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    required
+                    placeholder="São Paulo, SP, Brasil"
+                    className="text-zinc-900"
+                  />
+                </div>
+
+                {/* Pronomes */}
+                <div className="space-y-2">
+                  <Label htmlFor="pronouns" className="text-zinc-900">Pronomes</Label>
+                  <Input
+                    id="pronouns"
+                    value={pronouns}
+                    onChange={(e) => setPronouns(e.target.value)}
+                    placeholder="she/her"
+                    className="text-zinc-900"
+                  />
+                </div>
+
+                {/* Bio em Português */}
+                <div className="space-y-2">
+                  <Label htmlFor="bioPt" className="text-zinc-900">
+                    Biografia (Português) <span className="text-zinc-500 font-normal">(Recomendado)</span>
+                  </Label>
+                  <Textarea
+                    id="bioPt"
+                    value={bioPt}
+                    onChange={(e) => setBioPt(e.target.value)}
+                    placeholder="Texto da biografia em português..."
+                    rows={6}
+                    className="text-zinc-900"
+                  />
+                  <p className="text-xs text-zinc-500">
+                    ✅ Se preencher apenas este campo, os outros idiomas usarão as traduções padrão automaticamente
+                  </p>
+                </div>
+
+                {/* Bio em Inglês */}
+                <div className="space-y-2">
+                  <Label htmlFor="bioEn" className="text-zinc-900">
+                    Biografia (Inglês) <span className="text-zinc-500 font-normal">(Opcional)</span>
+                  </Label>
+                  <Textarea
+                    id="bioEn"
+                    value={bioEn}
+                    onChange={(e) => setBioEn(e.target.value)}
+                    placeholder="Biography text in English..."
+                    rows={6}
+                    className="text-zinc-900"
+                  />
+                  <p className="text-xs text-zinc-500">
+                    Deixe vazio para usar a tradução padrão em inglês
+                  </p>
+                </div>
+
+                {/* Bio em Espanhol */}
+                <div className="space-y-2">
+                  <Label htmlFor="bioEs" className="text-zinc-900">
+                    Biografia (Espanhol) <span className="text-zinc-500 font-normal">(Opcional)</span>
+                  </Label>
+                  <Textarea
+                    id="bioEs"
+                    value={bioEs}
+                    onChange={(e) => setBioEs(e.target.value)}
+                    placeholder="Texto de la biografía en español..."
+                    rows={6}
+                    className="text-zinc-900"
+                  />
+                  <p className="text-xs text-zinc-500">
+                    Deixe vazio para usar a tradução padrão em espanhol
+                  </p>
+                </div>
+
+                {/* E-mail */}
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-zinc-900">E-mail *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="alicestamato@gmail.com"
+                    className="text-zinc-900"
+                  />
+                </div>
+
+                {/* Instagram Pessoal */}
+                <div className="space-y-2">
+                  <Label htmlFor="instagramPersonal" className="text-zinc-900">Instagram Pessoal</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-zinc-600">@</span>
+                    <Input
+                      id="instagramPersonal"
+                      value={instagramPersonal}
+                      onChange={(e) => setInstagramPersonal(e.target.value.replace('@', ''))}
+                      placeholder="alicestamato"
+                      className="text-zinc-900"
+                    />
+                  </div>
+                </div>
+
+                {/* Instagram Lombada */}
+                <div className="space-y-2">
+                  <Label htmlFor="instagramLombada" className="text-zinc-900">Instagram Lombada Filmes</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-zinc-600">@</span>
+                    <Input
+                      id="instagramLombada"
+                      value={instagramLombada}
+                      onChange={(e) => setInstagramLombada(e.target.value.replace('@', ''))}
+                      placeholder="lombadafilmes"
+                      className="text-zinc-900"
+                    />
+                  </div>
+                </div>
+
+                {/* Botões */}
+                <div className="flex gap-4 pt-4">
+                  <Button
+                    type="submit"
+                    disabled={bioLoading}
+                    className="flex-1"
+                    size="lg"
+                  >
+                    {bioLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Salvar Bio
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
             </div>
           </TabsContent>
         </Tabs>

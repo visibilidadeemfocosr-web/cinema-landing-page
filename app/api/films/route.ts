@@ -57,7 +57,17 @@ export async function GET(request: NextRequest) {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     })
 
-    return NextResponse.json({ success: true, data: films }, { status: 200 })
+    return NextResponse.json(
+      { success: true, data: films }, 
+      { 
+        status: 200,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      }
+    )
   } catch (error) {
     console.error('Erro ao listar filmes:', error)
     return NextResponse.json(
