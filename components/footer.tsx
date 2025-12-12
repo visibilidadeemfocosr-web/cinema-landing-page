@@ -22,9 +22,9 @@ export function Footer() {
         </svg>
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-5xl mx-auto text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.50 0.06 35)' }}>
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
+        <div className="max-w-5xl mx-auto text-center py-4 sm:py-6">
+          <p className="text-xs sm:text-sm" style={{ color: 'oklch(0.50 0.06 35)' }}>
             @ Alice Stamato - Todos os direitos reservados
           </p>
         </div>

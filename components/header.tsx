@@ -28,27 +28,27 @@ export function Header() {
       }`}
     >
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16 sm:h-20">
           <button
             onClick={scrollToTop}
-            className="flex items-center gap-3 font-display text-2xl font-bold tracking-tight hover:text-accent transition-colors"
+            className="flex items-center gap-2 sm:gap-3 font-display text-lg sm:text-xl lg:text-2xl font-bold tracking-tight hover:text-accent transition-colors"
             aria-label="Voltar ao topo"
           >
             {/* Imagem do cabeçalho */}
-            <div className="relative w-12 h-12 flex-shrink-0">
+            <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
               <img
                 src="/peixeheader.png"
                 alt="Alice Stamato"
                 width={48}
                 height={48}
                 className="object-contain"
-                style={{ maxWidth: '48px', maxHeight: '48px' }}
+                style={{ maxWidth: '100%', maxHeight: '100%' }}
                 onError={(e) => {
                   e.currentTarget.style.display = 'none'
                 }}
               />
             </div>
-            <span>{t.header.title}</span>
+            <span className="truncate">{t.header.title}</span>
           </button>
 
           <LanguageSelector />

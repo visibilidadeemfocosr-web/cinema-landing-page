@@ -481,27 +481,29 @@ export function VimeoStyleProfile() {
       <div className="relative z-10">
         {/* Header */}
         <header className="border-b border-zinc-200" style={{ backgroundColor: 'oklch(0.99 0.01 35)' }}>
-          <div className="mx-auto flex h-16 max-w-[1800px] items-center justify-between px-6">
-            <div className="flex items-center gap-3 text-2xl font-bold">
-              <img
-                src="/peixeheader.png"
-                alt="Alice Stamato"
-                width={40}
-                height={40}
-                className="object-contain"
-                style={{ maxWidth: '40px', maxHeight: '40px' }}
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none'
-                }}
-              />
-              <span>Alice Stamato</span>
+          <div className="mx-auto flex h-14 sm:h-16 max-w-[1800px] items-center justify-between px-4 sm:px-6">
+            <div className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl lg:text-2xl font-bold">
+              <div className="relative w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
+                <img
+                  src="/peixeheader.png"
+                  alt="Alice Stamato"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                  style={{ maxWidth: '100%', maxHeight: '100%' }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none'
+                  }}
+                />
+              </div>
+              <span className="truncate">Alice Stamato</span>
             </div>
             <LanguageSelector />
           </div>
         </header>
 
         {/* Hero Banner */}
-        <div className="relative h-[280px] overflow-hidden bg-gradient-to-br from-zinc-100 to-zinc-200">
+        <div className="relative h-[200px] sm:h-[240px] lg:h-[280px] overflow-hidden bg-gradient-to-br from-zinc-100 to-zinc-200">
           <Image
             src="/cinematic-film-production-background.jpeg"
             alt="Banner"
@@ -513,38 +515,38 @@ export function VimeoStyleProfile() {
         </div>
 
         {/* Main Content */}
-        <div className="mx-auto max-w-[1400px] px-6">
-          <div className="flex gap-8 py-8">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 py-6 lg:py-8">
             {/* Sidebar */}
-            <aside className="w-[280px] flex-shrink-0">
-              <div className="sticky top-8 rounded-lg bg-zinc-50 p-6 text-zinc-900 border border-zinc-200">
+            <aside className="w-full lg:w-[280px] lg:flex-shrink-0">
+              <div className="lg:sticky lg:top-8 rounded-lg bg-zinc-50 p-4 sm:p-6 text-zinc-900 border border-zinc-200">
                 {/* Profile Image */}
-                <div className="mb-4 overflow-hidden rounded-full">
+                <div className="mb-4 overflow-hidden rounded-full mx-auto w-32 h-32 sm:w-40 sm:h-40 lg:w-full lg:h-auto">
                   <Image
                     src="/images/alicestamato.jpeg"
                     alt="Alice Stamato - Diretora de Cinema e Roteirista"
                     width={200}
                     height={200}
-                    className="w-full"
+                    className="w-full h-full object-cover"
                     loading="lazy"
-                    sizes="200px"
+                    sizes="(max-width: 640px) 128px, (max-width: 1024px) 160px, 200px"
                   />
                 </div>
 
                 {/* Name */}
-                <h1 className="mb-1 text-2xl font-bold">Alice Stamato</h1>
+                <h1 className="mb-1 text-xl sm:text-2xl font-bold text-center lg:text-left">Alice Stamato</h1>
 
                 {/* Location */}
-                <div className="mb-3 flex items-center gap-2 text-sm text-zinc-600">
+                <div className="mb-3 flex items-center justify-center lg:justify-start gap-2 text-sm text-zinc-600">
                   <MapPin className="h-4 w-4" />
                   <span>São Paulo, SP, Brasil</span>
                 </div>
 
                 {/* Pronouns */}
-                <div className="mb-4 text-sm text-zinc-600">she/her</div>
+                <div className="mb-4 text-sm text-zinc-600 text-center lg:text-left">she/her</div>
 
                 {/* Bio */}
-                <div className="mb-4 text-sm leading-relaxed text-zinc-700">
+                <div className="mb-4 text-xs sm:text-sm leading-relaxed text-zinc-700 text-center lg:text-left">
                   {showFullBio ? (
                     <>
                       <p className="mb-2">{t.about.bio1} <span className="font-medium text-zinc-900">{t.about.bio2}</span> {t.about.bio3}</p>
@@ -573,17 +575,17 @@ export function VimeoStyleProfile() {
                 </div>
 
                 {/* Email */}
-                <div className="mb-3 flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-zinc-600" />
-                  <a href="mailto:alicestamato@gmail.com" className="hover:underline">
+                <div className="mb-3 flex items-center justify-center lg:justify-start gap-2 text-xs sm:text-sm">
+                  <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-600 flex-shrink-0" />
+                  <a href="mailto:alicestamato@gmail.com" className="hover:underline break-all text-center lg:text-left">
                     alicestamato@gmail.com
                   </a>
                 </div>
 
                 {/* Social Links */}
-                <div className="mb-4 space-y-2 text-sm">
+                <div className="mb-4 space-y-2 text-xs sm:text-sm flex flex-col items-center lg:items-start">
                   <div className="flex items-center gap-2">
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                    <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.073-1.689-.073-4.948 0-3.259.014-3.668.072-4.948.2-4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
                     </svg>
                     <a
@@ -596,7 +598,7 @@ export function VimeoStyleProfile() {
                     </a>
                   </div>
                   <div className="flex items-center gap-2">
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                    <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
                     </svg>
                     <a
@@ -624,7 +626,7 @@ export function VimeoStyleProfile() {
                     </svg>
                     {t.vimeoProfile.follow}
                   </Button>
-                  <Button className="w-full justify-start gap-2 bg-emerald-600 text-white hover:bg-emerald-700">
+                  <Button className="w-full justify-center lg:justify-start gap-2 bg-emerald-600 text-white hover:bg-emerald-700 text-sm sm:text-base py-2.5 sm:py-2">
                     <Mail className="h-4 w-4" />
                     {t.vimeoProfile.message}
                   </Button>
@@ -656,14 +658,14 @@ export function VimeoStyleProfile() {
             </aside>
 
             {/* Main Video Grid */}
-            <main className="flex-1">
-              <div className="mb-6 flex items-end justify-between">
+            <main className="flex-1 w-full">
+              <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
                 <div>
-                  <h2 className="text-3xl md:text-4xl font-bold text-zinc-800">{t.vimeoProfile.portfolio}</h2>
-                  <div className="h-1.5 mt-2 bg-accent" style={{ width: '200px' }}></div>
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-zinc-800">{t.vimeoProfile.portfolio}</h2>
+                  <div className="h-1.5 mt-2 bg-accent" style={{ width: '100%', maxWidth: '200px' }}></div>
                 </div>
                 {!loading && allVideosToDisplay.length > 0 && (
-                  <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-oklch(0.96 0.02 35) text-oklch(0.55 0.12 35) border border-oklch(0.90 0.04 35)">
+                  <span className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-oklch(0.96 0.02 35) text-oklch(0.55 0.12 35) border border-oklch(0.90 0.04 35) self-start sm:self-auto">
                     {allVideosToDisplay.length} {allVideosToDisplay.length === 1 ? 'filme' : 'filmes'}
                   </span>
                 )}
@@ -695,7 +697,7 @@ export function VimeoStyleProfile() {
 
               {/* Videos List */}
               {!loading && allVideosToDisplay.length > 0 && (
-                <div className="space-y-8">
+                <div className="space-y-6 sm:space-y-8">
                   {displayedVideos.map((video) => (
                   <div key={video.id} className="group">
                     <button
@@ -704,7 +706,7 @@ export function VimeoStyleProfile() {
                       aria-label={`Assistir ${video.title}`}
                     >
                       {/* Video Thumbnail */}
-                      <div className="relative mb-3 aspect-video overflow-hidden rounded bg-gradient-to-br from-zinc-200 to-zinc-300 border border-zinc-200 cursor-pointer">
+                      <div className="relative mb-2 sm:mb-3 aspect-video overflow-hidden rounded-lg sm:rounded bg-gradient-to-br from-zinc-200 to-zinc-300 border border-zinc-200 cursor-pointer">
                         {video.thumbnail ? (
                           <Image
                             src={video.thumbnail}
@@ -737,25 +739,25 @@ export function VimeoStyleProfile() {
                           </div>
                         )}
                         {/* Play Button Overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90">
-                            <svg className="h-8 w-8 text-zinc-900" viewBox="0 0 24 24" fill="currentColor">
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-white/90 shadow-lg">
+                            <svg className="h-6 w-6 sm:h-8 sm:w-8 text-zinc-900" viewBox="0 0 24 24" fill="currentColor">
                               <path d="M8 5v14l11-7z" />
                             </svg>
                           </div>
                         </div>
                         {/* Duration Badge */}
-                        <div className="absolute bottom-3 right-3 rounded bg-black/80 px-2 py-1 text-xs font-medium text-white">
+                        <div className="absolute bottom-2 sm:bottom-3 right-2 sm:right-3 rounded bg-black/80 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium text-white">
                           {video.duration}
                         </div>
                       </div>
 
                       {/* Video Info */}
-                      <h3 className="text-lg font-medium text-zinc-900 group-hover:text-zinc-600 transition-colors mb-2">
+                      <h3 className="text-base sm:text-lg font-medium text-zinc-900 group-hover:text-zinc-600 transition-colors mb-2">
                         {video.title}
                       </h3>
                       {/* Tags: Ano, Duração, Categoria */}
-                      <div className="flex flex-wrap gap-2 mt-2">
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2">
                         {(() => {
                           const film = films.find(f => f.id === video.id)
                           if (!film) return null
@@ -778,26 +780,26 @@ export function VimeoStyleProfile() {
                           
                           return (
                             <>
-                              {film.year && (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200">
-                                  {film.year}
-                                </span>
-                              )}
-                              {film.duration && (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200">
-                                  {film.duration}
-                                </span>
-                              )}
-                              {film.category && (
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getCategoryColors(film.category)}`}>
-                                  {film.category}
-                                </span>
-                              )}
-                              {film.type && (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200">
-                                  {film.type}
-                                </span>
-                              )}
+                                       {film.year && (
+                                         <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200">
+                                           {film.year}
+                                         </span>
+                                       )}
+                                       {film.duration && (
+                                         <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200">
+                                           {film.duration}
+                                         </span>
+                                       )}
+                                       {film.category && (
+                                         <span className={`inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium border ${getCategoryColors(film.category)}`}>
+                                           {film.category}
+                                         </span>
+                                       )}
+                                       {film.type && (
+                                         <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-zinc-100 text-zinc-700 border border-zinc-200">
+                                           {film.type}
+                                         </span>
+                                       )}
                             </>
                           )
                         })()}
@@ -811,7 +813,7 @@ export function VimeoStyleProfile() {
               {/* Video Modal */}
               <Dialog open={!!selectedVideo} onOpenChange={(open) => !open && setSelectedVideo(null)}>
                 <DialogContent 
-                  className="!max-w-[100vw] !w-screen !h-[98vh] p-0 bg-black !border-0 !m-0 !translate-x-[-50%] !translate-y-[-50%] !top-[50%] !left-[50%] !rounded-none !grid-cols-1" 
+                  className="!max-w-[100vw] !w-screen h-screen sm:h-[98vh] p-0 bg-black !border-0 !m-0 !translate-x-[-50%] !translate-y-[-50%] !top-[50%] !left-[50%] !rounded-none !grid-cols-1" 
                   showCloseButton={true}
                   style={{ width: '100vw', maxWidth: '100vw' }}
                 >
@@ -834,18 +836,18 @@ export function VimeoStyleProfile() {
                 </DialogContent>
               </Dialog>
 
-              {!loading && !showAll && allVideosToDisplay.length > 4 && (
-                <div className="mt-8 flex justify-center">
-                  <Button
-                    onClick={() => setShowAll(true)}
-                    variant="outline"
-                    size="lg"
-                    className="border-2 border-zinc-400 bg-zinc-800 text-white hover:bg-zinc-700 hover:text-white transition-colors px-8 font-semibold"
-                  >
-                    {t.vimeoProfile.viewMore}
-                  </Button>
-                </div>
-              )}
+                     {!loading && !showAll && allVideosToDisplay.length > 4 && (
+                       <div className="mt-6 sm:mt-8 flex justify-center">
+                         <Button
+                           onClick={() => setShowAll(true)}
+                           variant="outline"
+                           size="lg"
+                           className="border-2 border-zinc-400 bg-zinc-800 text-white hover:bg-zinc-700 hover:text-white transition-colors px-6 sm:px-8 font-semibold text-sm sm:text-base w-full sm:w-auto"
+                         >
+                           {t.vimeoProfile.viewMore}
+                         </Button>
+                       </div>
+                     )}
             </main>
           </div>
         </div>
