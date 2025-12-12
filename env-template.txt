@@ -1,0 +1,34 @@
+# ============================================
+# CONFIGURAÇÃO DO BANCO DE DADOS (SUPABASE)
+# ============================================
+# 1. Acesse https://supabase.com e crie um projeto
+# 2. Vá em Settings > Database > Connection String
+# 3. Copie a connection string e cole abaixo:
+
+DATABASE_URL="postgresql://user:password@host:5432/database"
+
+# ============================================
+# CONFIGURAÇÃO DO CLOUDFLARE R2 (OPCIONAL)
+# ============================================
+# Para vídeos grandes (até 15GB), configure o Cloudflare R2:
+# 1. Acesse https://cloudflare.com
+# 2. Vá em R2 > Create Bucket
+# 3. Crie um API Token em Manage R2 API Tokens
+# 4. Preencha as variáveis abaixo:
+
+# R2_ACCOUNT_ID="seu-account-id"
+# R2_ACCESS_KEY_ID="sua-access-key"
+# R2_SECRET_ACCESS_KEY="seu-secret-key"
+# R2_BUCKET_NAME="nome-do-bucket"
+# R2_PUBLIC_URL="https://pub-xxxxx.r2.dev"
+
+# ============================================
+# INSTRUÇÕES
+# ============================================
+# 1. Copie este conteúdo
+# 2. Crie um arquivo chamado .env.local na raiz do projeto
+# 3. Cole o conteúdo e preencha com suas credenciais
+# 4. O arquivo .env.local está no .gitignore e não será commitado
+# 5. Para produção na Vercel, adicione essas variáveis nas configurações do projeto
+# 6. Veja SETUP.md para instruções detalhadas
+

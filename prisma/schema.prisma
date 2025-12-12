@@ -1,0 +1,53 @@
+// Prisma Schema para gerenciar filmes e vídeos
+// Configurado para PostgreSQL (Supabase) - funciona na Vercel
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Film {
+  id          String   @id @default(cuid())
+  title       String
+  titleEn     String?  // Título em inglês
+  titleEs     String?  // Título em espanhol
+  description String?
+  descriptionEn String?
+  descriptionEs String?
+  year        Int
+  duration    String   // Formato: "01:45:30"
+  category    String   // Ficção, Drama, Documentário, Comercial
+  type        String?  // Vídeo Clipe, Curta Metragem, Longa Metragem, Propaganda, Institucional
+  thumbnail   String?  // URL da thumbnail
+  videoUrl    String   // URL do vídeo (cloud storage)
+  videoSize   Int?     // Tamanho em bytes (opcional quando usa URL existente)
+  videoFormat String?  // mp4, mov, etc. (opcional quando usa URL existente)
+  views       Int      @default(0)
+  isPublished Boolean  @default(false)
+  displayOrder Int     @default(0) // Ordem de exibição no site
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([category])
+  @@index([isPublished])
+  @@index([createdAt])
+  @@index([displayOrder])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  createdAt DateTime @default(now())
+  read      Boolean  @default(false)
+  
+  @@index([email])
+  @@index([createdAt])
+}
+
