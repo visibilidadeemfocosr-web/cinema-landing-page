@@ -82,28 +82,46 @@ export async function GET(request: NextRequest) {
     // Buscar filmes e ordenar manualmente para lidar com valores null
     // Tratar erro de prepared statement tentando reconectar se necessário
     let films
-    try {
-      films = await prisma.film.findMany({
-        where,
-      })
-    } catch (preparedStatementError: any) {
-      // Se for erro de prepared statement, tentar desconectar e reconectar
-      if (preparedStatementError?.message?.includes('prepared statement') || 
-          preparedStatementError?.code === '42P05') {
-        console.warn('Erro de prepared statement detectado, tentando reconectar...')
-        try {
-          await prisma.$disconnect()
-          await prisma.$connect()
-          // Tentar novamente após reconectar
-          films = await prisma.film.findMany({
-            where,
-          })
-        } catch (retryError) {
-          console.error('Erro ao reconectar após prepared statement:', retryError)
-          throw retryError
+    let retryCount = 0
+    const maxRetries = 2
+    
+    while (retryCount <= maxRetries) {
+      try {
+        films = await prisma.film.findMany({
+          where,
+        })
+        break // Sucesso, sair do loop
+      } catch (queryError: any) {
+        // Verificar se é erro de prepared statement
+        const errorMessage = queryError?.message || String(queryError)
+        const errorCode = queryError?.code || (queryError as any)?.meta?.code
+        
+        const isPreparedStatementError = 
+          errorMessage.includes('prepared statement') ||
+          errorCode === '42P05' ||
+          (errorMessage.includes('42P05'))
+        
+        if (isPreparedStatementError && retryCount < maxRetries) {
+          console.warn(`Erro de prepared statement detectado (tentativa ${retryCount + 1}/${maxRetries}), tentando reconectar...`)
+          try {
+            await prisma.$disconnect()
+            // Aguardar um pouco antes de reconectar
+            await new Promise(resolve => setTimeout(resolve, 100))
+            await prisma.$connect()
+            retryCount++
+            continue // Tentar novamente
+          } catch (reconnectError) {
+            console.error('Erro ao reconectar:', reconnectError)
+            retryCount++
+            if (retryCount > maxRetries) {
+              throw queryError // Se não conseguir reconectar, lançar o erro original
+            }
+            continue
+          }
+        } else {
+          // Não é erro de prepared statement ou já tentou demais, lançar o erro
+          throw queryError
         }
-      } else {
-        throw preparedStatementError
       }
     }
 
@@ -133,8 +151,63 @@ export async function GET(request: NextRequest) {
     )
   } catch (error) {
     console.error('Erro ao listar filmes:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+    const errorMessage = error instanceof Error ? error.message : String(error)
     const errorStack = error instanceof Error ? error.stack : undefined
+    
+    // Verificar se é erro de prepared statement que escapou
+    const isPreparedStatementError = 
+      errorMessage.includes('prepared statement') ||
+      errorMessage.includes('42P05')
+    
+    if (isPreparedStatementError) {
+      console.warn('Erro de prepared statement detectado no catch geral, tentando uma última vez...')
+      try {
+        // Reconstruir where do request original
+        const searchParams = new URL(request.url).searchParams
+        const published = searchParams.get('published')
+        const category = searchParams.get('category')
+        const where: any = {}
+        
+        if (published === 'true') {
+          where.isPublished = true
+        }
+        
+        if (category) {
+          where.category = category
+        }
+        
+        // Tentar uma última vez com reconexão
+        await prisma.$disconnect()
+        await new Promise(resolve => setTimeout(resolve, 200))
+        await prisma.$connect()
+        const films = await prisma.film.findMany({ where })
+        
+        // Ordenar filmes
+        films.sort((a, b) => {
+          const aOrder = a.displayOrder ?? -1
+          const bOrder = b.displayOrder ?? -1
+          if (aOrder !== bOrder) {
+            return bOrder - aOrder
+          }
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        })
+        
+        return NextResponse.json(
+          { success: true, data: films }, 
+          { 
+            status: 200,
+            headers: {
+              'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0',
+            }
+          }
+        )
+      } catch (finalError) {
+        console.error('Erro na tentativa final:', finalError)
+        // Continuar para retornar array vazio
+      }
+    }
     
     // Log detalhado em produção também para debug
     if (error instanceof Error) {
