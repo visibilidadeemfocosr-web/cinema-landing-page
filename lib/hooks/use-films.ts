@@ -57,7 +57,8 @@ export function useFilms(published?: boolean, category?: string) {
         params.append('t', Date.now().toString())
 
         const controller = new AbortController()
-        const abortTimeoutId = setTimeout(() => controller.abort(), 10000) // 10s timeout
+        // Timeout maior para cold starts no Vercel (podem demorar até 15-20s)
+        const abortTimeoutId = setTimeout(() => controller.abort(), 20000) // 20s timeout
 
         const response = await fetch(`/api/films?${params.toString()}`, {
           cache: 'no-store',
@@ -109,12 +110,14 @@ export function useFilms(published?: boolean, category?: string) {
             
             // Se não há dados mas a API retornou sucesso, tentar novamente
             if (retryAttempt < maxRetries && data.success && !hasDataRef.current) {
-              console.log(`Tentando novamente (array vazio)... (tentativa ${retryAttempt + 1}/${maxRetries})`)
+              // Delay maior para dar tempo de cold starts no Vercel
+              const delay = retryAttempt === 0 ? 1000 : retryAttempt === 1 ? 2000 : 3000
+              console.log(`Tentando novamente (array vazio)... (tentativa ${retryAttempt + 1}/${maxRetries}) em ${delay}ms`)
               timeoutId = setTimeout(() => {
                 if (isMounted) {
                   fetchFilms(retryAttempt + 1)
                 }
-              }, 500 * (retryAttempt + 1)) // Backoff mais rápido
+              }, delay)
               return
             }
             
@@ -126,12 +129,14 @@ export function useFilms(published?: boolean, category?: string) {
         } else if (data.success === false) {
           // Se falhou, tentar novamente se ainda houver tentativas
           if (retryAttempt < maxRetries && !hasDataRef.current) {
-            console.log(`Tentando novamente após erro... (tentativa ${retryAttempt + 1}/${maxRetries})`)
+            // Delay maior para dar tempo de cold starts no Vercel
+            const delay = retryAttempt === 0 ? 1000 : retryAttempt === 1 ? 2000 : 3000
+            console.log(`Tentando novamente após erro... (tentativa ${retryAttempt + 1}/${maxRetries}) em ${delay}ms`)
             timeoutId = setTimeout(() => {
               if (isMounted) {
                 fetchFilms(retryAttempt + 1)
               }
-            }, 500 * (retryAttempt + 1))
+            }, delay)
             return
           }
           
@@ -144,11 +149,13 @@ export function useFilms(published?: boolean, category?: string) {
           // Caso inesperado
           console.warn('Resposta da API em formato inesperado:', data)
           if (retryAttempt < maxRetries && !hasDataRef.current) {
+            // Delay maior para dar tempo de cold starts no Vercel
+            const delay = retryAttempt === 0 ? 1000 : retryAttempt === 1 ? 2000 : 3000
             timeoutId = setTimeout(() => {
               if (isMounted) {
                 fetchFilms(retryAttempt + 1)
               }
-            }, 500 * (retryAttempt + 1))
+            }, delay)
             return
           }
           setFilms([])
@@ -172,12 +179,14 @@ export function useFilms(published?: boolean, category?: string) {
         
         // Tentar novamente em caso de erro de rede
         if (retryAttempt < maxRetries && !hasDataRef.current) {
-          console.log(`Tentando novamente após exceção... (tentativa ${retryAttempt + 1}/${maxRetries})`)
+          // Delay maior para dar tempo de cold starts no Vercel
+          const delay = retryAttempt === 0 ? 1000 : retryAttempt === 1 ? 2000 : 3000
+          console.log(`Tentando novamente após exceção... (tentativa ${retryAttempt + 1}/${maxRetries}) em ${delay}ms`)
           timeoutId = setTimeout(() => {
             if (isMounted) {
               fetchFilms(retryAttempt + 1)
             }
-          }, 500 * (retryAttempt + 1))
+          }, delay)
           return
         }
         

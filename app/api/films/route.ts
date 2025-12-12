@@ -71,12 +71,24 @@ export async function GET(request: NextRequest) {
     if (process.env.VERCEL && process.env.DATABASE_URL) {
       const dbUrl = process.env.DATABASE_URL
       const hasPooling = dbUrl.includes('pooler') || dbUrl.includes('pgbouncer')
-      console.log('DATABASE_URL pooling check:', { 
-        hasPooling, 
-        port: dbUrl.match(/:\d+/)?.[0],
-        hasPooler: dbUrl.includes('pooler'),
-        hasPgbouncer: dbUrl.includes('pgbouncer')
-      })
+      const portMatch = dbUrl.match(/:(\d+)/)
+      const port = portMatch ? portMatch[1] : 'unknown'
+      
+      if (!hasPooling || port !== '6543') {
+        console.warn('⚠️ ATENÇÃO: DATABASE_URL pode não estar usando Connection Pooling!', {
+          hasPooling,
+          port,
+          expectedPort: '6543',
+          recommendation: 'Use Session Pooler (porta 6543) para melhor performance em serverless'
+        })
+      } else {
+        console.log('✅ DATABASE_URL está usando Connection Pooling corretamente:', { 
+          hasPooling, 
+          port,
+          hasPooler: dbUrl.includes('pooler'),
+          hasPgbouncer: dbUrl.includes('pgbouncer')
+        })
+      }
     }
 
     // Buscar filmes e ordenar manualmente para lidar com valores null
