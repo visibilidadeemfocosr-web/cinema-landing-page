@@ -120,8 +120,8 @@ export async function POST(request: NextRequest) {
     ]
     
     for (const key of allowedKeys) {
-      if (key in validatedData && validatedData[key] !== undefined) {
-        prismaData[key] = validatedData[key]
+      if (key in validatedData && (validatedData as any)[key] !== undefined) {
+        prismaData[key] = (validatedData as any)[key]
       }
     }
     
