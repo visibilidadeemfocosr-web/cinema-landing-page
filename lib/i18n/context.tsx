@@ -3,10 +3,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { Language, translations } from './translations'
 
+type Translations = typeof translations.pt
+
 interface I18nContextType {
   language: Language
   setLanguage: (lang: Language) => void
-  t: typeof translations.pt
+  t: Translations
 }
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined)
@@ -27,7 +29,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('language', lang)
   }
 
-  const t = translations[language]
+  const t = translations[language] as Translations
 
   return (
     <I18nContext.Provider value={{ language, setLanguage, t }}>
