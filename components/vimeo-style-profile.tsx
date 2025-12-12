@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { Mail, MapPin, Film, Loader2, Info } from "lucide-react"
+import { Mail, MapPin, Film, Loader2, Info, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -1301,12 +1301,21 @@ export function VimeoStyleProfile() {
               <Dialog open={!!selectedVideo} onOpenChange={(open) => !open && setSelectedVideo(null)}>
                 <DialogContent 
                   className="!max-w-[100vw] !w-screen h-screen sm:h-[98vh] p-0 bg-black !border-0 !m-0 !translate-x-[-50%] !translate-y-[-50%] !top-[50%] !left-[50%] !rounded-none !grid-cols-1" 
-                  showCloseButton={true}
+                  showCloseButton={false}
                   style={{ width: '100vw', maxWidth: '100vw' }}
                 >
                   {selectedVideo && (
                     <>
                       <DialogTitle className="sr-only">Player de Vídeo</DialogTitle>
+                      {/* Botão de Fechar Customizado */}
+                      <button
+                        onClick={() => setSelectedVideo(null)}
+                        className="absolute top-4 right-4 z-50 flex items-center justify-center w-10 h-10 rounded-full bg-white/90 hover:bg-white transition-colors shadow-lg"
+                        aria-label="Fechar vídeo"
+                        title="Fechar (ESC)"
+                      >
+                        <X className="h-6 w-6 text-zinc-900" />
+                      </button>
                       <div className="relative w-full h-full bg-black flex items-center justify-center">
                         <video
                           src={selectedVideo}
