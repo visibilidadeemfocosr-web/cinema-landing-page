@@ -243,12 +243,41 @@
   }
 }
 
+@keyframes circle-pulse-smooth {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes circle-rotate-smooth {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .animate-circle-pulse {
   animation: circle-pulse 3s ease-in-out infinite;
 }
 
 .animate-circle-rotate {
   animation: circle-rotate 15s linear infinite;
+  transform-origin: center;
+}
+
+.animate-circle-pulse-smooth {
+  animation: circle-pulse-smooth 6s ease-in-out infinite;
+}
+
+.animate-circle-rotate-smooth {
+  animation: circle-rotate-smooth 25s linear infinite;
   transform-origin: center;
 }
 

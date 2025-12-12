@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { Mail, MapPin, Film } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useI18n } from "@/lib/i18n/context"
 import { LanguageSelector } from "@/components/language-selector"
 import { Footer } from "@/components/footer"
@@ -15,7 +15,14 @@ export function VimeoStyleProfile() {
   const [showFullBio, setShowFullBio] = useState(false)
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null)
   const { t } = useI18n()
-  const { films, loading } = useFilms(true) // Buscar apenas filmes publicados
+  const { films, loading, error } = useFilms(true) // Buscar apenas filmes publicados
+  
+  // Debug em desenvolvimento
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Films state:', { films, loading, error, count: films.length })
+    }
+  }, [films, loading, error])
   
   // Converter filmes do banco para o formato esperado
   const videosFromDb = films.map((film) => ({

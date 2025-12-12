@@ -65,7 +65,13 @@ R2_ACCESS_KEY_ID=sua-access-key-id
 R2_SECRET_ACCESS_KEY=sua-secret-access-key
 R2_BUCKET_NAME=alicestamato
 R2_PUBLIC_URL=https://pub-SEU_ID.r2.dev
+ADMIN_PASSWORD=sua-senha-segura-aqui
 ```
+
+**🔐 Sobre ADMIN_PASSWORD**:
+- Esta é a senha para acessar a área administrativa (`/admin`)
+- Se não for definida, o padrão será `101113Al`
+- Para maior segurança, defina uma senha personalizada na variável de ambiente
 
 **⚠️ IMPORTANTE**: 
 - Substitua todos os valores pelos seus valores reais

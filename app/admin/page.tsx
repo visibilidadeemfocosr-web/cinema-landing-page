@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
-import { Loader2, Upload, Film, Edit, Trash2, Plus, X, XCircle, ArrowUpDown } from 'lucide-react'
+import { Loader2, Upload, Film, Edit, Trash2, Plus, X, XCircle, ArrowUpDown, LogOut } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface FilmData {
   id?: string
@@ -31,6 +32,7 @@ interface FilmData {
 
 export default function AdminPage() {
   const { toast } = useToast()
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [films, setFilms] = useState<any[]>([])
   const [loadingFilms, setLoadingFilms] = useState(true)
@@ -205,6 +207,29 @@ export default function AdminPage() {
     })
     setEditingId(film.id)
     setShowForm(true)
+  }
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      })
+
+      if (response.ok) {
+        toast({
+          title: 'Logout realizado',
+          description: 'Você foi desconectado com sucesso.',
+        })
+        router.push('/login')
+        router.refresh()
+      }
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Erro ao fazer logout',
+        variant: 'destructive',
+      })
+    }
   }
 
   const handleDelete = async (id: string) => {
@@ -396,13 +421,14 @@ export default function AdminPage() {
             </h1>
             <p className="text-zinc-600">Gerencie seus filmes e vídeos</p>
           </div>
-          <Button
-            onClick={() => {
-              resetForm()
-              setShowForm(!showForm)
-            }}
-            className="flex items-center gap-2"
-          >
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => {
+                resetForm()
+                setShowForm(!showForm)
+              }}
+              className="flex items-center gap-2"
+            >
             {showForm ? (
               <>
                 <X className="h-4 w-4" />
@@ -415,6 +441,15 @@ export default function AdminPage() {
               </>
             )}
           </Button>
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Sair
+          </Button>
+          </div>
         </div>
 
         {/* Lista de Filmes */}
