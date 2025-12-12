@@ -1,14 +1,18 @@
 "use client"
 
 import Image from "next/image"
-import { Mail, MapPin, Film } from "lucide-react"
+import { Mail, MapPin, Film, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { useState, useEffect } from "react"
 import { useI18n } from "@/lib/i18n/context"
 import { LanguageSelector } from "@/components/language-selector"
 import { Footer } from "@/components/footer"
 import { useFilms } from "@/lib/hooks/use-films"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import { useToast } from "@/hooks/use-toast"
 
 export function VimeoStyleProfile() {
   const [showAll, setShowAll] = useState(false)
@@ -28,8 +32,18 @@ export function VimeoStyleProfile() {
   const [email, setEmail] = useState<string>('alicestamato@gmail.com')
   const [instagramPersonal, setInstagramPersonal] = useState<string>('alicestamato')
   const [instagramLombada, setInstagramLombada] = useState<string>('lombadafilmes')
+  const [showMessageModal, setShowMessageModal] = useState(false)
+  const [messageForm, setMessageForm] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  })
+  const [messageLoading, setMessageLoading] = useState(false)
+  const [messageErrors, setMessageErrors] = useState<Record<string, string>>({})
   const { t, language } = useI18n()
   const { films, loading, error } = useFilms(true) // Buscar apenas filmes publicados
+  const { toast } = useToast()
 
   // Carregar banner configurável
   useEffect(() => {
@@ -166,6 +180,86 @@ export function VimeoStyleProfile() {
     const interval = setInterval(fetchBio, 5000)
     return () => clearInterval(interval)
   }, [])
+  
+  // Função para enviar mensagem
+  const handleSendMessage = async () => {
+    // Limpar erros anteriores
+    setMessageErrors({})
+    
+    // Validação básica
+    const errors: Record<string, string> = {}
+    
+    if (!messageForm.name.trim() || messageForm.name.trim().length < 2) {
+      errors.name = 'Nome deve ter pelo menos 2 caracteres'
+    }
+    
+    if (!messageForm.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(messageForm.email)) {
+      errors.email = 'Email inválido'
+    }
+    
+    if (!messageForm.subject.trim() || messageForm.subject.trim().length < 3) {
+      errors.subject = 'Assunto deve ter pelo menos 3 caracteres'
+    }
+    
+    if (!messageForm.message.trim() || messageForm.message.trim().length < 10) {
+      errors.message = 'Mensagem deve ter pelo menos 10 caracteres'
+    }
+    
+    if (Object.keys(errors).length > 0) {
+      setMessageErrors(errors)
+      return
+    }
+    
+    setMessageLoading(true)
+    
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(messageForm),
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok && data.success) {
+        toast({
+          title: 'Mensagem enviada!',
+          description: data.message || 'Sua mensagem foi enviada com sucesso.',
+        })
+        
+        // Limpar formulário e fechar modal
+        setMessageForm({ name: '', email: '', subject: '', message: '' })
+        setShowMessageModal(false)
+        setMessageErrors({})
+      } else {
+        toast({
+          title: 'Erro ao enviar',
+          description: data.message || 'Ocorreu um erro ao enviar sua mensagem.',
+          variant: 'destructive',
+        })
+        
+        if (data.errors) {
+          setMessageErrors(data.errors.reduce((acc: Record<string, string>, err: any) => {
+            if (err.path && err.path.length > 0) {
+              acc[err.path[0]] = err.message
+            }
+            return acc
+          }, {}))
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error)
+      toast({
+        title: 'Erro ao enviar',
+        description: 'Ocorreu um erro ao enviar sua mensagem. Tente novamente.',
+        variant: 'destructive',
+      })
+    } finally {
+      setMessageLoading(false)
+    }
+  }
   
   // Debug em desenvolvimento e produção
   useEffect(() => {
@@ -937,7 +1031,10 @@ export function VimeoStyleProfile() {
                     </svg>
                     {t.vimeoProfile.follow}
                   </Button>
-                  <Button className="w-full justify-center lg:justify-start gap-2 bg-emerald-600 text-white hover:bg-emerald-700 text-sm sm:text-base py-2.5 sm:py-2">
+                  <Button 
+                    onClick={() => setShowMessageModal(true)}
+                    className="w-full justify-center lg:justify-start gap-2 bg-emerald-600 text-white hover:bg-emerald-700 text-sm sm:text-base py-2.5 sm:py-2"
+                  >
                     <Mail className="h-4 w-4" />
                     {t.vimeoProfile.message}
                   </Button>
@@ -973,7 +1070,7 @@ export function VimeoStyleProfile() {
               <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
                 <div>
                   <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-zinc-800">{t.vimeoProfile.portfolio}</h2>
-                  <div className="h-1.5 mt-2 bg-accent" style={{ width: '100%', maxWidth: '200px' }}></div>
+                  <div className="h-0.5 mt-2 bg-accent" style={{ width: '100%', maxWidth: '200px' }}></div>
                 </div>
                 {!loading && allVideosToDisplay.length > 0 && (
                   <span className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-oklch(0.96 0.02 35) text-oklch(0.55 0.12 35) border border-oklch(0.90 0.04 35) self-start sm:self-auto">
@@ -1163,6 +1260,110 @@ export function VimeoStyleProfile() {
           </div>
         </div>
       </div>
+      
+      {/* Message Modal */}
+      <Dialog open={showMessageModal} onOpenChange={setShowMessageModal}>
+        <DialogContent className="max-w-md bg-white">
+          <DialogTitle className="text-xl font-bold mb-4 text-zinc-900">
+            {t.vimeoProfile.message}
+          </DialogTitle>
+          
+          <div className="space-y-4">
+            {/* Nome */}
+            <div className="space-y-2">
+              <Label htmlFor="message-name" className="text-zinc-900">Nome *</Label>
+              <Input
+                id="message-name"
+                value={messageForm.name}
+                onChange={(e) => setMessageForm({ ...messageForm, name: e.target.value })}
+                placeholder="Seu nome"
+                className={`text-zinc-900 bg-white ${messageErrors.name ? 'border-red-500' : ''}`}
+              />
+              {messageErrors.name && (
+                <p className="text-sm text-red-500">{messageErrors.name}</p>
+              )}
+            </div>
+            
+            {/* Email */}
+            <div className="space-y-2">
+              <Label htmlFor="message-email" className="text-zinc-900">Email *</Label>
+              <Input
+                id="message-email"
+                type="email"
+                value={messageForm.email}
+                onChange={(e) => setMessageForm({ ...messageForm, email: e.target.value })}
+                placeholder="seu@email.com"
+                className={`text-zinc-900 bg-white ${messageErrors.email ? 'border-red-500' : ''}`}
+              />
+              {messageErrors.email && (
+                <p className="text-sm text-red-500">{messageErrors.email}</p>
+              )}
+            </div>
+            
+            {/* Assunto */}
+            <div className="space-y-2">
+              <Label htmlFor="message-subject" className="text-zinc-900">Assunto *</Label>
+              <Input
+                id="message-subject"
+                value={messageForm.subject}
+                onChange={(e) => setMessageForm({ ...messageForm, subject: e.target.value })}
+                placeholder="Assunto da mensagem"
+                className={`text-zinc-900 bg-white ${messageErrors.subject ? 'border-red-500' : ''}`}
+              />
+              {messageErrors.subject && (
+                <p className="text-sm text-red-500">{messageErrors.subject}</p>
+              )}
+            </div>
+            
+            {/* Mensagem */}
+            <div className="space-y-2">
+              <Label htmlFor="message-text" className="text-zinc-900">Mensagem *</Label>
+              <Textarea
+                id="message-text"
+                value={messageForm.message}
+                onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })}
+                placeholder="Escreva sua mensagem aqui..."
+                rows={6}
+                className={`text-zinc-900 bg-white ${messageErrors.message ? 'border-red-500' : ''}`}
+              />
+              {messageErrors.message && (
+                <p className="text-sm text-red-500">{messageErrors.message}</p>
+              )}
+            </div>
+            
+            {/* Botões */}
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowMessageModal(false)
+                  setMessageForm({ name: '', email: '', subject: '', message: '' })
+                  setMessageErrors({})
+                }}
+                className="flex-1"
+                disabled={messageLoading}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleSendMessage}
+                className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700"
+                disabled={messageLoading}
+              >
+                {messageLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  'Enviar'
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
       <Footer />
     </div>
   )
