@@ -503,10 +503,12 @@ export function VimeoStyleProfile() {
         {/* Hero Banner */}
         <div className="relative h-[280px] overflow-hidden bg-gradient-to-br from-zinc-100 to-zinc-200">
           <Image
-            src="/cinematic-film-production-background.jpg"
+            src="/cinematic-film-production-background.jpeg"
             alt="Banner"
             fill
             className="object-cover opacity-80"
+            sizes="100vw"
+            priority
           />
         </div>
 
