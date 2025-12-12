@@ -170,7 +170,7 @@ export function Portfolio() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {displayFilms.map((project, index) => (
               <Card
-                key={project.id || index}
+                key={(project as any).id || `project-${index}`}
                 className="group overflow-hidden cursor-pointer border-2 hover:border-accent/50 hover:shadow-2xl transition-all duration-500 bg-card/50 backdrop-blur-sm animate-stagger"
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
