@@ -14,9 +14,10 @@ export function VimeoStyleProfile() {
   const [showAll, setShowAll] = useState(false)
   const [showFullBio, setShowFullBio] = useState(false)
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null)
-  const [bannerUrl, setBannerUrl] = useState<string>('/cinematic-film-production-background.jpeg')
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null) // Iniciar como null para evitar flash
   const [bannerPosition, setBannerPosition] = useState<string>('center')
   const [bannerOpacity, setBannerOpacity] = useState<number>(90) // Opacidade em percentual (0-100)
+  const [bannerLoading, setBannerLoading] = useState<boolean>(true) // Estado de loading do banner
   const [profileImage, setProfileImage] = useState<string>('/images/alicestamato.jpeg')
   const [name, setName] = useState<string>('Alice Stamato')
   const [location, setLocation] = useState<string>('São Paulo, SP, Brasil')
@@ -32,34 +33,109 @@ export function VimeoStyleProfile() {
 
   // Carregar banner configurável
   useEffect(() => {
+    let isMounted = true // Flag para evitar atualizações se componente foi desmontado
+    
     const fetchBanner = async () => {
       try {
+        if (isMounted) {
+          setBannerLoading(true)
+        }
         // Adicionar timestamp para evitar cache
-        const response = await fetch(`/api/settings/banner?t=${Date.now()}`)
+        const response = await fetch(`/api/settings/banner?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+          },
+        })
+        
+        if (!isMounted) return // Não atualizar se componente foi desmontado
+        
         if (response.ok) {
           const data = await response.json()
           if (data.bannerUrl) {
-            setBannerUrl(data.bannerUrl)
+            // Preload da imagem antes de atualizar o estado (usar HTMLImageElement nativo)
+            const img = document.createElement('img')
+            img.onload = () => {
+              if (isMounted) {
+                setBannerUrl(data.bannerUrl)
+                setBannerLoading(false)
+              }
+            }
+            img.onerror = () => {
+              if (isMounted) {
+                setBannerUrl('/cinematic-film-production-background.jpeg')
+                setBannerLoading(false)
+              }
+            }
+            img.src = data.bannerUrl
+            
+            if (data.bannerPosition) {
+              setBannerPosition(data.bannerPosition)
+            }
+            if (data.bannerOpacity !== undefined) {
+              setBannerOpacity(data.bannerOpacity)
+            }
+          } else {
+            // Fallback apenas se não houver URL configurada
+            if (isMounted) {
+              setBannerUrl('/cinematic-film-production-background.jpeg')
+              setBannerLoading(false)
+            }
           }
-          if (data.bannerPosition) {
-            setBannerPosition(data.bannerPosition)
-            console.log('Banner position carregado:', data.bannerPosition)
-          }
-          if (data.bannerOpacity !== undefined) {
-            setBannerOpacity(data.bannerOpacity)
+        } else {
+          // Fallback em caso de erro
+          if (isMounted) {
+            setBannerUrl('/cinematic-film-production-background.jpeg')
+            setBannerLoading(false)
           }
         }
       } catch (error) {
-        // Ignorar erro, usar padrão
-        console.error('Erro ao carregar banner:', error)
+        // Fallback em caso de erro
+        if (isMounted) {
+          console.error('Erro ao carregar banner:', error)
+          setBannerUrl('/cinematic-film-production-background.jpeg')
+          setBannerLoading(false)
+        }
       }
     }
+    
+    // Carregar imediatamente
     fetchBanner()
     
-    // Recarregar a cada 5 segundos para pegar atualizações
-    const interval = setInterval(fetchBanner, 5000)
-    return () => clearInterval(interval)
-  }, [])
+    // Recarregar a cada 5 segundos para pegar atualizações (sem mostrar loading)
+    const interval = setInterval(() => {
+      if (isMounted) {
+        fetch(`/api/settings/banner?t=${Date.now()}`, {
+          cache: 'no-store',
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (isMounted && data.bannerUrl && data.bannerUrl !== bannerUrl) {
+              // Só atualizar se a URL mudou (usar HTMLImageElement nativo)
+              const img = document.createElement('img')
+              img.onload = () => {
+                if (isMounted) {
+                  setBannerUrl(data.bannerUrl)
+                }
+              }
+              img.src = data.bannerUrl
+              
+              if (data.bannerPosition) setBannerPosition(data.bannerPosition)
+              if (data.bannerOpacity !== undefined) setBannerOpacity(data.bannerOpacity)
+            }
+          })
+          .catch(() => {
+            // Ignorar erros no intervalo
+          })
+      }
+    }, 5000)
+    
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Carregar dados da bio
   useEffect(() => {
@@ -650,21 +726,41 @@ export function VimeoStyleProfile() {
 
         {/* Hero Banner */}
         <div className="relative h-[200px] sm:h-[240px] lg:h-[280px] overflow-hidden bg-gradient-to-br from-zinc-100 to-zinc-200">
-            <Image
-              src={bannerUrl}
-              alt="Banner"
-              fill
-              className="object-cover"
-              style={{ 
-                objectPosition: bannerPosition,
-                opacity: bannerOpacity / 100, // Converter percentual para decimal (0-1)
-              }}
-              sizes="100vw"
-              priority
-              onError={(e) => {
-                e.currentTarget.src = '/cinematic-film-production-background.jpeg'
-              }}
-            />
+            {bannerLoading ? (
+              // Skeleton enquanto carrega (evita flash da imagem antiga)
+              <div className="absolute inset-0 bg-gradient-to-br from-zinc-200 to-zinc-300 animate-pulse" />
+            ) : bannerUrl ? (
+              <Image
+                key={bannerUrl} // Key para forçar re-render quando URL mudar
+                src={bannerUrl}
+                alt="Banner"
+                fill
+                className="object-cover"
+                style={{ 
+                  objectPosition: bannerPosition,
+                  opacity: bannerOpacity / 100, // Converter percentual para decimal (0-1)
+                }}
+                sizes="100vw"
+                priority
+                onError={(e) => {
+                  e.currentTarget.src = '/cinematic-film-production-background.jpeg'
+                }}
+              />
+            ) : (
+              // Fallback se não houver URL
+              <Image
+                src="/cinematic-film-production-background.jpeg"
+                alt="Banner"
+                fill
+                className="object-cover"
+                style={{ 
+                  objectPosition: bannerPosition,
+                  opacity: bannerOpacity / 100,
+                }}
+                sizes="100vw"
+                priority
+              />
+            )}
           </div>
 
         {/* Main Content */}
