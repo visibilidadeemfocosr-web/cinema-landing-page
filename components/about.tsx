@@ -1,5 +1,4 @@
 import Image from "next/image"
-import Image from "next/image"
 import { MapPin, Mail, Sparkles, Film, Award } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
