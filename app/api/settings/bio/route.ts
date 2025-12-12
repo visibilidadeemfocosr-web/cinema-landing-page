@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     } = body
 
     // Ler configurações existentes
-    let existingSettings = {}
+    let existingSettings: any = {}
     if (existsSync(SETTINGS_FILE)) {
       const fileContent = await readFile(SETTINGS_FILE, 'utf-8')
       existingSettings = JSON.parse(fileContent)
