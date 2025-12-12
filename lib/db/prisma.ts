@@ -7,17 +7,6 @@ const globalForPrisma = globalThis as unknown as {
 // Verificar se DATABASE_URL está configurado
 if (!process.env.DATABASE_URL) {
   console.error('⚠️ DATABASE_URL não está configurado!')
-} else {
-  // Verificar se está usando connection pooling (necessário para serverless)
-  const dbUrl = process.env.DATABASE_URL
-  if ((process.env.VERCEL || process.env.NODE_ENV === 'production') && 
-      !dbUrl.includes('pgbouncer') && 
-      !dbUrl.includes('pooler') &&
-      dbUrl.includes('supabase')) {
-    console.warn('⚠️ ATENÇÃO: Para Supabase em produção, use a URL de Connection Pooling!')
-    console.warn('   Vá em Supabase > Settings > Database > Connection String > Session mode')
-    console.warn('   Use a URL que contém "pooler" ou "pgbouncer"')
-  }
 }
 
 function createPrismaClient() {
@@ -44,13 +33,40 @@ function createPrismaClient() {
 }
 
 // Reutilizar instância global para evitar múltiplas conexões
-// O problema de "prepared statement already exists" é resolvido usando
-// connection pooling no DATABASE_URL (PgBouncer para Supabase)
+// Em Vercel/serverless, o globalThis pode não ser compartilhado entre invocações,
+// mas ainda é melhor tentar reutilizar quando possível
 export const prisma =
   globalForPrisma.prisma ?? createPrismaClient()
 
 // Armazenar na instância global para reutilização
 if (!globalForPrisma.prisma) {
   globalForPrisma.prisma = prisma
+}
+
+// Função helper para executar queries com tratamento de erro de prepared statement
+export async function withPrisma<T>(
+  operation: (client: PrismaClient) => Promise<T>
+): Promise<T> {
+  try {
+    // Garantir que está conectado
+    await prisma.$connect()
+    return await operation(prisma)
+  } catch (error: any) {
+    // Se for erro de prepared statement, tentar desconectar e reconectar
+    if (error?.message?.includes('prepared statement') || 
+        error?.code === '42P05') {
+      console.warn('Erro de prepared statement detectado, tentando reconectar...')
+      try {
+        await prisma.$disconnect()
+        await prisma.$connect()
+        // Tentar novamente após reconectar
+        return await operation(prisma)
+      } catch (retryError) {
+        console.error('Erro ao reconectar:', retryError)
+        throw retryError
+      }
+    }
+    throw error
+  }
 }
 

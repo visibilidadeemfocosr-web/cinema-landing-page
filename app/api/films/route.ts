@@ -67,10 +67,45 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Log para debug: verificar se está usando pooling
+    if (process.env.VERCEL && process.env.DATABASE_URL) {
+      const dbUrl = process.env.DATABASE_URL
+      const hasPooling = dbUrl.includes('pooler') || dbUrl.includes('pgbouncer')
+      console.log('DATABASE_URL pooling check:', { 
+        hasPooling, 
+        port: dbUrl.match(/:\d+/)?.[0],
+        hasPooler: dbUrl.includes('pooler'),
+        hasPgbouncer: dbUrl.includes('pgbouncer')
+      })
+    }
+
     // Buscar filmes e ordenar manualmente para lidar com valores null
-    const films = await prisma.film.findMany({
-      where,
-    })
+    // Tratar erro de prepared statement tentando reconectar se necessário
+    let films
+    try {
+      films = await prisma.film.findMany({
+        where,
+      })
+    } catch (preparedStatementError: any) {
+      // Se for erro de prepared statement, tentar desconectar e reconectar
+      if (preparedStatementError?.message?.includes('prepared statement') || 
+          preparedStatementError?.code === '42P05') {
+        console.warn('Erro de prepared statement detectado, tentando reconectar...')
+        try {
+          await prisma.$disconnect()
+          await prisma.$connect()
+          // Tentar novamente após reconectar
+          films = await prisma.film.findMany({
+            where,
+          })
+        } catch (retryError) {
+          console.error('Erro ao reconectar após prepared statement:', retryError)
+          throw retryError
+        }
+      } else {
+        throw preparedStatementError
+      }
+    }
 
     // Ordenar: primeiro por displayOrder DECRESCENTE (maior número primeiro, nulls por último), depois por createdAt
     films.sort((a, b) => {
