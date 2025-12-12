@@ -47,6 +47,7 @@ export default function AdminPage() {
   const [bannerFile, setBannerFile] = useState<File | null>(null)
   const [bannerLoading, setBannerLoading] = useState(false)
   const [bannerPosition, setBannerPosition] = useState<string>('center')
+  const [bannerOpacity, setBannerOpacity] = useState<number>(90) // Opacidade em percentual (0-100)
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [imagePosition, setImagePosition] = useState({ x: 50, y: 50 }) // Percentuais (50% = center)
@@ -283,6 +284,7 @@ export default function AdminPage() {
       if (formData.thumbnailFile) {
         const thumbnailFormData = new FormData()
         thumbnailFormData.append('file', formData.thumbnailFile)
+        thumbnailFormData.append('type', 'thumbnail') // Identificar que é uma thumbnail
 
         const thumbnailUploadResponse = await fetch('/api/upload', {
           method: 'POST',
@@ -307,6 +309,7 @@ export default function AdminPage() {
       if (formData.videoFile) {
         const uploadFormData = new FormData()
         uploadFormData.append('file', formData.videoFile)
+        uploadFormData.append('type', 'video') // Identificar que é um vídeo
 
         const uploadResponse = await fetch('/api/upload', {
           method: 'POST',
@@ -430,6 +433,7 @@ export default function AdminPage() {
       if (bannerFile) {
         const formData = new FormData()
         formData.append('file', bannerFile)
+        formData.append('type', 'banner') // Identificar que é um banner
 
         const uploadResponse = await fetch('/api/upload', {
           method: 'POST',
@@ -453,6 +457,7 @@ export default function AdminPage() {
         body: JSON.stringify({ 
           bannerUrl: bannerUrlToSave,
           bannerPosition: bannerPosition,
+          bannerOpacity: bannerOpacity,
         }),
       })
 
@@ -466,6 +471,9 @@ export default function AdminPage() {
         setBannerFile(null)
         if (responseData.data?.bannerPosition) {
           setBannerPosition(responseData.data.bannerPosition)
+        }
+        if (responseData.data?.bannerOpacity !== undefined) {
+          setBannerOpacity(responseData.data.bannerOpacity)
         }
         toast({
           title: 'Sucesso!',
@@ -1079,7 +1087,10 @@ export default function AdminPage() {
                         src={URL.createObjectURL(bannerFile)}
                         alt="Preview do banner"
                         className="w-full h-full object-cover pointer-events-none"
-                        style={{ objectPosition: `${imagePosition.x}% ${imagePosition.y}%` }}
+                        style={{ 
+                          objectPosition: `${imagePosition.x}% ${imagePosition.y}%`,
+                          opacity: bannerOpacity / 100,
+                        }}
                         draggable={false}
                       />
                     ) : (
@@ -1087,7 +1098,10 @@ export default function AdminPage() {
                         src={bannerUrl}
                         alt="Banner atual"
                         className="w-full h-full object-cover pointer-events-none"
-                        style={{ objectPosition: `${imagePosition.x}% ${imagePosition.y}%` }}
+                        style={{ 
+                          objectPosition: `${imagePosition.x}% ${imagePosition.y}%`,
+                          opacity: bannerOpacity / 100,
+                        }}
                         draggable={false}
                         onError={(e) => {
                           e.currentTarget.src = '/cinematic-film-production-background.jpeg'
@@ -1115,7 +1129,7 @@ export default function AdminPage() {
                   <Input
                     id="bannerFile"
                     type="file"
-                    accept="image/jpeg,image/png,image/webp,image/jpg"
+                    accept="image/jpeg,image/jpg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
                     onChange={(e) => {
                       const file = e.target.files?.[0]
                       if (file) {
@@ -1257,6 +1271,69 @@ export default function AdminPage() {
                   <p className="text-xs text-zinc-400 mt-2">
                     Posição atual: <strong>{bannerPosition}</strong> ({imagePosition.x.toFixed(0)}%, {imagePosition.y.toFixed(0)}%)
                   </p>
+                </div>
+
+                {/* Controle de Opacidade */}
+                <div className="space-y-2">
+                  <Label htmlFor="bannerOpacity" className="text-zinc-900">
+                    Opacidade do Banner: {bannerOpacity}%
+                  </Label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="range"
+                      id="bannerOpacity"
+                      min="0"
+                      max="100"
+                      value={bannerOpacity}
+                      onChange={(e) => setBannerOpacity(Number(e.target.value))}
+                      className="flex-1 h-2 bg-zinc-200 rounded-lg appearance-none cursor-pointer accent-oklch(0.58 0.15 35)"
+                    />
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={bannerOpacity}
+                      onChange={(e) => {
+                        const value = Number(e.target.value)
+                        if (value >= 0 && value <= 100) {
+                          setBannerOpacity(value)
+                        }
+                      }}
+                      className="w-20 text-zinc-900 text-center"
+                    />
+                  </div>
+                  <p className="text-xs text-zinc-500">
+                    Ajuste a opacidade do banner (0% = transparente, 100% = totalmente opaco)
+                  </p>
+                  {/* Preview da opacidade no banner */}
+                  <div className="mt-2">
+                    <div className="relative w-full h-32 rounded-lg overflow-hidden border border-zinc-200 bg-zinc-100">
+                      {bannerFile ? (
+                        <img
+                          src={URL.createObjectURL(bannerFile)}
+                          alt="Preview opacidade"
+                          className="w-full h-full object-cover"
+                          style={{ 
+                            objectPosition: `${imagePosition.x}% ${imagePosition.y}%`,
+                            opacity: bannerOpacity / 100,
+                          }}
+                        />
+                      ) : (
+                        <img
+                          src={bannerUrl}
+                          alt="Preview opacidade"
+                          className="w-full h-full object-cover"
+                          style={{ 
+                            objectPosition: `${imagePosition.x}% ${imagePosition.y}%`,
+                            opacity: bannerOpacity / 100,
+                          }}
+                          onError={(e) => {
+                            e.currentTarget.src = '/cinematic-film-production-background.jpeg'
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Botão Salvar */}

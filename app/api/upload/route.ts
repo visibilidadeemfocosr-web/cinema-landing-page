@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File
+    const uploadType = formData.get('type') as string | null // 'banner', 'thumbnail', 'video' ou null
 
     if (!file) {
       return NextResponse.json(
@@ -34,12 +35,27 @@ export async function POST(request: NextRequest) {
 
     // Validar tipo de arquivo (vídeo ou imagem)
     const allowedVideoTypes = ['video/mp4', 'video/mov', 'video/quicktime', 'video/webm']
-    const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg']
+    const allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
     const allowedTypes = [...allowedVideoTypes, ...allowedImageTypes]
     
-    if (!allowedTypes.includes(file.type)) {
+    // Obter extensão do arquivo
+    const fileExtension = file.name.split('.').pop()?.toLowerCase() || ''
+    
+    // Também validar por extensão (alguns navegadores podem não retornar o MIME type correto)
+    const allowedExtensions = {
+      images: ['jpg', 'jpeg', 'png', 'webp'],
+      videos: ['mp4', 'mov', 'webm']
+    }
+    
+    const isValidMimeType = allowedTypes.includes(file.type)
+    const isValidExtension = fileExtension && (
+      allowedExtensions.images.includes(fileExtension) || 
+      allowedExtensions.videos.includes(fileExtension)
+    )
+    
+    if (!isValidMimeType && !isValidExtension) {
       return NextResponse.json(
-        { success: false, message: 'Tipo de arquivo não permitido. Use vídeo (mp4, mov, webm) ou imagem (jpg, png, webp)' },
+        { success: false, message: 'Tipo de arquivo não permitido. Use vídeo (mp4, mov, webm) ou imagem (jpg, jpeg, png, webp)' },
         { status: 400 }
       )
     }
@@ -47,10 +63,22 @@ export async function POST(request: NextRequest) {
     // Gerar nome único para o arquivo
     const timestamp = Date.now()
     const randomString = Math.random().toString(36).substring(2, 15)
-    const fileExtension = file.name.split('.').pop()
-    // Determinar pasta baseado no tipo
-    const folder = allowedImageTypes.includes(file.type) ? 'thumbnails' : 'films'
-    const fileName = `${folder}/${timestamp}-${randomString}.${fileExtension}`
+    const finalExtension = fileExtension || 'jpg'
+    
+    // Determinar pasta baseado no tipo de upload ou tipo de arquivo
+    let folder: string
+    if (uploadType === 'banner') {
+      folder = 'banners' // Pasta específica para banners
+    } else if (uploadType === 'thumbnail') {
+      folder = 'thumbnails'
+    } else if (uploadType === 'video') {
+      folder = 'films'
+    } else {
+      // Fallback: determinar pela extensão do arquivo
+      folder = allowedImageTypes.includes(file.type) ? 'thumbnails' : 'films'
+    }
+    
+    const fileName = `${folder}/${timestamp}-${randomString}.${finalExtension}`
 
     // Converter File para Buffer
     const arrayBuffer = await file.arrayBuffer()

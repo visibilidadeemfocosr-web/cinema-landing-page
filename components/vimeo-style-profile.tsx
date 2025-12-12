@@ -16,6 +16,7 @@ export function VimeoStyleProfile() {
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null)
   const [bannerUrl, setBannerUrl] = useState<string>('/cinematic-film-production-background.jpeg')
   const [bannerPosition, setBannerPosition] = useState<string>('center')
+  const [bannerOpacity, setBannerOpacity] = useState<number>(90) // Opacidade em percentual (0-100)
   const { t } = useI18n()
   const { films, loading, error } = useFilms(true) // Buscar apenas filmes publicados
 
@@ -33,6 +34,9 @@ export function VimeoStyleProfile() {
           if (data.bannerPosition) {
             setBannerPosition(data.bannerPosition)
             console.log('Banner position carregado:', data.bannerPosition)
+          }
+          if (data.bannerOpacity !== undefined) {
+            setBannerOpacity(data.bannerOpacity)
           }
         }
       } catch (error) {
@@ -610,9 +614,10 @@ export function VimeoStyleProfile() {
               src={bannerUrl}
               alt="Banner"
               fill
-              className="object-cover opacity-80"
+              className="object-cover"
               style={{ 
                 objectPosition: bannerPosition,
+                opacity: bannerOpacity / 100, // Converter percentual para decimal (0-1)
               }}
               sizes="100vw"
               priority
@@ -620,7 +625,7 @@ export function VimeoStyleProfile() {
                 e.currentTarget.src = '/cinematic-film-production-background.jpeg'
               }}
             />
-        </div>
+          </div>
 
         {/* Main Content */}
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6">

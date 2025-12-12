@@ -22,6 +22,7 @@ export async function GET() {
       return NextResponse.json({
         bannerUrl: '/cinematic-film-production-background.jpeg',
         bannerPosition: 'center',
+        bannerOpacity: 90,
       })
     }
 
@@ -31,6 +32,7 @@ export async function GET() {
     return NextResponse.json({
       bannerUrl: settings.bannerUrl || '/cinematic-film-production-background.jpeg',
       bannerPosition: settings.bannerPosition || 'center',
+      bannerOpacity: settings.bannerOpacity !== undefined ? settings.bannerOpacity : 90,
     })
   } catch (error) {
     console.error('Erro ao ler configuração:', error)
@@ -38,6 +40,7 @@ export async function GET() {
       { 
         bannerUrl: '/cinematic-film-production-background.jpeg',
         bannerPosition: 'center',
+        bannerOpacity: 90,
       },
       { status: 200 }
     )
@@ -50,7 +53,7 @@ export async function POST(request: NextRequest) {
     await ensureDataDir()
 
     const body = await request.json()
-    const { bannerUrl, bannerPosition } = body
+    const { bannerUrl, bannerPosition, bannerOpacity } = body
 
     if (!bannerUrl) {
       return NextResponse.json(
@@ -59,9 +62,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validar opacidade (0-100)
+    const opacity = bannerOpacity !== undefined 
+      ? Math.max(0, Math.min(100, Number(bannerOpacity))) 
+      : 90
+
     const settings = {
       bannerUrl,
       bannerPosition: bannerPosition || 'center',
+      bannerOpacity: opacity,
       updatedAt: new Date().toISOString(),
     }
 
