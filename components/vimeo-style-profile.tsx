@@ -616,7 +616,7 @@ export function VimeoStyleProfile() {
           
           {/* Linha quebrada orgânica superior - assimétrica */}
           <path
-            d="M 28% 20% L 32% 18% L 35% 22% L 38% 19% L 41% 23% L 44% 20%"
+            d="M 28 20 L 32 18 L 35 22 L 38 19 L 41 23 L 44 20"
             stroke="oklch(0.58 0.15 35)"
             strokeWidth="2.5"
             strokeLinecap="round"
@@ -626,7 +626,7 @@ export function VimeoStyleProfile() {
 
           {/* Linha quebrada orgânica meio - trajetória livre */}
           <path
-            d="M 68% 58% L 72% 56% L 75% 60% L 78% 57% L 81% 61% L 84% 58%"
+            d="M 68 58 L 72 56 L 75 60 L 78 57 L 81 61 L 84 58"
             stroke="oklch(0.65 0.18 30)"
             strokeWidth="2.5"
             strokeLinecap="round"
