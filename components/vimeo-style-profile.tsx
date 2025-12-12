@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useI18n } from "@/lib/i18n/context"
 import { LanguageSelector } from "@/components/language-selector"
 import { Footer } from "@/components/footer"
@@ -306,22 +306,30 @@ export function VimeoStyleProfile() {
   }, [films, loading, error])
   
   // Converter filmes do banco para o formato esperado
-  const videosFromDb = Array.isArray(films) && films.length > 0 ? films.map((film) => ({
-    id: film.id,
-    title: film.title,
-    thumbnail: film.thumbnail || "/placeholder.svg",
-    duration: film.duration,
-    views: film.views.toString(),
-    link: film.videoUrl,
-    vimeoId: film.id,
-    year: film.year,
-    category: film.category,
-    type: film.type || undefined,
-  })) : []
+  // Usar useMemo para evitar recálculos desnecessários e garantir que os dados sejam atualizados
+  const videosFromDb = useMemo(() => {
+    if (!Array.isArray(films) || films.length === 0) {
+      return []
+    }
+    return films.map((film) => ({
+      id: film.id,
+      title: film.title,
+      thumbnail: film.thumbnail || "/placeholder.svg",
+      duration: film.duration,
+      views: film.views.toString(),
+      link: film.videoUrl,
+      vimeoId: film.id,
+      year: film.year,
+      category: film.category,
+      type: film.type || undefined,
+    }))
+  }, [films])
   
   // Usar apenas filmes do banco (sem fallback para mock)
   const allVideosToDisplay = videosFromDb
-  const displayedVideos = showAll ? allVideosToDisplay : allVideosToDisplay.slice(0, 4)
+  const displayedVideos = useMemo(() => {
+    return showAll ? allVideosToDisplay : allVideosToDisplay.slice(0, 4)
+  }, [showAll, allVideosToDisplay])
   
   // Log adicional para debug
   useEffect(() => {
